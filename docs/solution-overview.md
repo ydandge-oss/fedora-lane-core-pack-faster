@@ -1,98 +1,91 @@
-# Solution Overview — Platform Consistency Pilot for Fedora Lane  
-## Junior Consultant · Core Pack practice
+# Solution Overview — RHEL Golden Image + Insights for Fedora Lane  
+## Junior Consultant · Core Pack · RHEL TDP (no Ansible)
 
 ## 1. Purpose
 
-This solution shows Fedora Lane a **repeatable first step** against the Core Pack challenges: stop treating every Linux location as a snowflake, prove **config-as-code** across a model of NA DC / EMEA DC / boutique / cloud hosts, and run a **Boutique Inventory Sync** sample service in a portable way — the kind of custom tool the Core Pack already names as part of their estate.
+Establish a **production-shaped RHEL standard** for Fedora Lane’s hybrid Linux estate: one approved **golden image** built with **Image Builder**, registered to **Red Hat Insights**, with a clear Day-2 patch path for Critical/High CVEs. Prove the platform with a small **Boutique Inventory Sync** service running on that RHEL baseline.
 
-> **Scope note:** The Core Pack states that each **TDP Expansion Pack** will prescribe the Red Hat technology and exact build for that Practice Activity. This pilot is a **Core Pack–aligned practice build** (Ansible + portable app). When your Expansion Pack arrives, extend or replace `solution/` with that TDP’s requirements and keep this challenge → value narrative.
+This branch intentionally **does not use Ansible**. Day-0 consistency comes from the image; Day-2 comes from Insights + `dnf` security updates. Ansible can be a later phase once the team is ready.
 
 ## 2. Customer challenges addressed
 
-| Core Pack challenge | How this solution addresses it |
+| Core Pack challenge | How this RHEL solution addresses it |
 |---|---|
-| Siloed hybrid/multi-cloud ops | Single Git repo + Ansible inventory grouping DC, boutique, and cloud host classes |
-| Configuration drift | Idempotent playbooks for chrony, packages, sshd baseline, banner |
-| Automation friction | One `site.yml` entry point instead of per-site manual SSH |
-| Unpredictable environments blocking modernization | Same inventory-sync image runs locally via Compose — portable pattern for later on-prem/cloud |
-| Portability pain | Containerized sample service; no host-specific snowflake install |
-| COTS constraints | Does **not** touch SAP internals; syncs *around* SAP ↔ PoS as the Core Pack describes |
-| Security baseline / audit toil | Documented baseline role + health/status endpoints for evidence; secrets via env, not baked into image |
+| Siloed hybrid/multi-cloud ops | Same RHEL image pattern for NA DC, EMEA DC, boutiques, cloud Linux |
+| Configuration drift (day 0) | Golden image — hosts are born the same |
+| Automation friction | Fewer unique manual builds; Image Builder is the factory |
+| Unpredictable envs block modernization | Known OS + packages under app services |
+| Portability pain | Same baseline on-prem (qcow2) and cloud (AMI path) |
+| COTS constraints | OS standardization under/around SAP & PoS — no SAP rip-and-replace |
+| Security posture / audit | Insights client in image; vulnerability & compliance visibility |
+| CVE “within days” | Insights + `dnf` security update runbook |
 
 ## 3. High-level architecture
 
 ```
-GitHub (source of truth)
+Image Builder blueprint (Git)
         │
-        ├─ Ansible inventory ──► host groups:
-        │     na_dc · emea_dc · boutiques · cloud_linux
-        │         │
-        │         └─ playbooks/site.yml
-        │               ├─ common baseline (chrony, packages)
-        │               └─ security baseline (sshd, banner)
+        ▼
+  Compose → qcow2 / AMI / installer
         │
-        └─ inventory-sync (Python FastAPI)
-              └─ Docker Compose → /health · /api/v1/sync/status
+        ├─ Virginia DC VM (RHEL)
+        ├─ Frankfurt DC VM (RHEL)
+        ├─ Boutique closet VM (RHEL)
+        └─ Cloud Linux (RHEL)
+                │
+                ├─ subscription-manager + insights-client
+                └─ Podman → Boutique Inventory Sync (:8080)
 ```
-
-**Pilot topology (fictional model hosts — not live Fedora Lane servers)**
-
-| Group | Represents | Core Pack mapping |
-|---|---|---|
-| `na_dc` | Virginia DC Linux | Primary DC |
-| `emea_dc` | Frankfurt DC Linux | EMEA DR / performance |
-| `boutiques` | Flagship closet servers | Paris / Tokyo–style closets |
-| `cloud_linux` | AWS/Azure Linux instances | Hybrid cloud Linux estate |
 
 ## 4. Key design decisions
 
-### Why Ansible first (for Core Pack)
+### Golden image first (not Ansible first)
 
-1. Casey’s mandate is standards across a **diverse Linux fleet** — Ansible is the natural control plane for that story.  
-2. Alex rejects science projects; playbooks are proven, reviewable, and runnable with `--check`.  
-3. Ren can treat Git history + playbook output as baseline evidence.  
-4. Expansion Packs can later add OpenShift, AAP, ACS, etc. without throwing away the GitOps habit.
+**Why:** You can deliver consistency for Casey without writing automation code yet. Alex gets a reviewable artifact (blueprint in Git). Ren gets Insights on every new host.
 
-### Why Boutique Inventory Sync as the sample app
+### Image Builder over hand-built VMs
 
-1. Named explicitly in the Core Pack (SAP ↔ local PoS).  
-2. Small enough to demo in minutes; important enough to feel real to Cameron.  
-3. Shows portability (container) without pretending we migrated SAP.
+**Why:** Repeatable, versioned blueprint; supports multiple output types for Fedora Lane’s hybrid footprint.
 
-### Why GitHub instead of Consulting GitLab
+### Insights for Day-2 visibility
 
-The Core Pack asks for the cohort FASTER GitLab sub-group as source of truth. For this practice workspace we use **GitHub** (account attached to Cursor). If your program requires GitLab submission, mirror or push the same tree there — content stays identical.
+**Why:** Core Pack demands fast Critical/High patching and better audit evidence. Insights is the RHEL-native answer without a custom CMDB project.
+
+### Sample app = Inventory Sync (from Core Pack)
+
+**Why:** Named custom tool (SAP ↔ PoS). Shows Cameron a portable service on the standard OS without touching SAP internals.
 
 ## 5. What we implemented
 
-1. Ansible inventory modeling Fedora Lane host classes (`solution/ansible/inventory/`)  
-2. `common` and `security_baseline` roles (`solution/ansible/roles/`)  
-3. `site.yml` orchestration playbook  
-4. Boutique Inventory Sync FastAPI app + Docker Compose (`solution/inventory-sync/`)  
-5. Junior consultant docs + Part 1 / Part 2 presentation scripts (`docs/`)  
+1. Image Builder blueprint — `solution/image-builder/fl-rhel-baseline.toml`  
+2. Optional Kickstart — `solution/kickstart/fl-rhel-baseline.ks`  
+3. Day-2 runbook — `docs/runbook-rhel-day2.md`  
+4. Demo scripts — `solution/scripts/`  
+5. Inventory Sync API — `solution/inventory-sync/`  
+6. Presentation pack — Part 1 video + Part 2 live scripts  
 
 ## 6. Challenge → Solution → Demo mapping
 
 | Challenge | Artifact | Demo moment |
 |---|---|---|
-| Drift / silos | Inventory + `site.yml` | Show host groups; run playbook `--check` |
-| Automation friction | Idempotent roles | Re-run playbook; show “ok / changed” |
-| Modernization / portability | `inventory-sync` Compose | `curl /health` and `/api/v1/sync/status` |
-| Security / audit | Security role + no secrets in Git | Show `.gitignore`, env-based token, banner/sshd tasks |
-| COTS coexistence | Sync API around SAP (not inside SAP) | Explain boundary in walkthrough |
+| Drift at provision | Blueprint TOML | Walk packages/services/NTP |
+| Hybrid outputs | Image Builder docs | qcow2 vs AMI mention |
+| CVE / audit | Day-2 runbook + Insights | `insights-client` / updateinfo story |
+| Modernization | Inventory-sync on RHEL/Podman | `curl /health` |
+| No Ansible yet | This whole branch | Explicit “image now, Ansible later” |
 
 ## 7. Risks & mitigations
 
 | Risk | Mitigation |
 |---|---|
-| Expansion Pack changes required tech | Keep challenge mapping; swap `solution/` internals |
-| Demo against real customer hosts | Use local/demo inventory only; redacted examples |
-| Scope creep into PCI CHD | Pilot is non-cardholder pattern; call out Ren’s path for CHD later |
-| Over-promising full hybrid unification | Position as **first milestone**, not silver bullet (Alex language) |
+| No builder host in lab | Narrate blueprint + use stand-in RHEL VM; compose before live call |
+| Config drift **after** day 0 | Call out Ansible/system roles as Phase 2 |
+| Secrets in Kickstart | Placeholders only; activation keys via vault |
+| Scope into PCI CHD | Pilot non-CHD boutiques/apps first with Ren |
 
-## 8. Recommended next phase (after Core Pack pilot)
+## 8. Recommended next phase
 
-1. Apply the same Git + automation pattern to the **specific Red Hat technology** in your next Expansion Pack.  
-2. Workshop with Casey and Alex: inventory truth source for the real Linux fleet.  
-3. With Ren: map baseline controls to PCI/GDPR/CCPA evidence packs.  
-4. With Cameron: pick the next e-commerce microservice candidate after inventory sync.
+1. Workshop with Casey: freeze RHEL version + package set for v1 image.  
+2. First real compose → Virginia lab cluster.  
+3. Insights dashboard review with Ren.  
+4. Later: add Ansible Automation / system roles for ongoing drift — when you are ready.

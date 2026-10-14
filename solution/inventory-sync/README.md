@@ -3,6 +3,8 @@
 Sample service for the Fedora Lane Core Pack custom application:  
 *synchronizes inventory data between central SAP ERP and local PoS systems*.
 
+On the **RHEL golden-image branch**, run this on the baseline host with **Podman** (see `docs/runbook-rhel-day2.md`) or locally with `uvicorn` for the presentation.
+
 ## Run (Docker)
 
 ```bash

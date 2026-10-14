@@ -1,55 +1,46 @@
 # Follow-up email draft  
 ## Send within 2 days of the live POD presentation
 
-**To:** Casey Novak; Alex Lee *(SME personas)*  
+**To:** Casey Novak; Alex Lee  
 **Cc:** [Pod Host]; [Your Manager]; faster@redhat.com  
-**Subject:** Fedora Lane — Platform Consistency Pilot follow-up (Core Pack practice)
+**Subject:** Fedora Lane — RHEL golden image + Insights pilot follow-up
 
 ---
 
 Hi Casey, Alex,
 
-Thank you for the time on [date] and for the questions during the session.
+Thank you for the time on [date] and for the discussion.
 
 ## Overview
 
-We walked through a **Platform Consistency Pilot** aligned to the Fedora Lane Core Pack challenges:
+We walked through a **RHEL-focused Platform Consistency Pilot** (no Ansible in this phase):
 
-- Hybrid/multi-cloud complexity without unified management  
-- Configuration drift and manual, error-prone operations  
-- Impact on e-commerce modernization and portability  
-- Difficulty enforcing one security baseline and preparing for PCI / GDPR / CCPA audits  
+- Image Builder blueprint as the approved golden image for DC / boutique / cloud Linux  
+- Insights + `dnf` security updates for Critical/High CVE response  
+- Boutique Inventory Sync sample service on that RHEL pattern (SAP untouched)  
 
-The working artifacts are in GitHub (practice source of truth):
+**Repo / branch:**  
+https://github.com/ydandge-oss/fedora-lane-core-pack-faster/tree/rhel-image-builder-insights  
 
-**Repo:** https://github.com/ydandge-oss/fedora-lane-core-pack-faster  
+Key paths:
 
-Key docs:
-
+- Blueprint: `solution/image-builder/fl-rhel-baseline.toml`  
+- Day-2: `docs/runbook-rhel-day2.md`  
 - Solution overview: `docs/solution-overview.md`  
-- Customer brief / challenges: `docs/customer-brief-fedora-lane.md`, `docs/challenges-and-stakeholders.md`  
-
-Demo components:
-
-- Ansible inventory + baseline playbooks (`solution/ansible/`)  
-- Boutique Inventory Sync sample API (`solution/inventory-sync/`)  
 
 ## Next steps
 
-1. **90-minute workshop** (proposed) with Casey + Alex — map the inventory model to the real Linux estate and agree acceptance criteria.  
-2. Fold in the **Practice Activity Expansion Pack** requirements when released (Core Pack notes PA1 early Oct / PA2 early Nov / PA3 late Jan).  
-3. Align with Ren on which baseline controls should appear in the next audit evidence pack.  
+1. **90-minute workshop** — freeze v1 package set and RHEL version for the blueprint.  
+2. First **qcow2 compose** for Virginia lab.  
+3. Insights review with Ren for audit evidence format.  
+4. Later phase (optional): Ansible / system roles for post-day-0 drift.  
 
-Please reply with a preferred workshop slot, or I can send two to three options.
-
-## Answers to questions we parked
+## Parking-lot answers
 
 | # | Question | Answer |
 |---|---|---|
-| 1 | *[parking lot item]* | *[answer after the call]* |
-| 2 | *[parking lot item]* | *[answer after the call]* |
-
-If anything above needs correction or more detail, I’m happy to jump on a short follow-up.
+| 1 | *[item]* | *[answer]* |
+| 2 | *[item]* | *[answer]* |
 
 Thanks again,  
 Yash Dandge  
