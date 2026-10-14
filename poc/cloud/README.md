@@ -1,107 +1,69 @@
-# Hybrid cloud PoC — replicate Fedora Lane (AWS + Azure)
+# Hybrid cloud PoC — replicate Fedora Lane (AWS EC2 + optional Azure)
 
-Fedora Lane’s Core Pack footprint includes **AWS (primary e-commerce)** and **Azure (secondary)**. This folder lets you stand up **two RHEL (or RHEL-compatible) servers** that receive the **same baseline** as the Image Builder blueprint, then prove the app works on both.
+Fedora Lane’s Core Pack uses **AWS (primary)** and **Azure (secondary)**.  
+**AWS path uses Amazon EC2 via AWS CLI — not Terraform.**
 
 ```
-                    ┌─────────────────────┐
-  Git blueprint ───►│ Same day-0 baseline │
-                    └─────────┬───────────┘
-              ┌───────────────┼───────────────┐
-              ▼               ▼               ▼
-        AWS EC2 RHEL    Azure RHEL VM    (optional lab/on-prem)
-        us-east-1       westeurope
-              │               │
-              └───────┬───────┘
-                      ▼
-              Inventory Sync :8080
-              + Insights story
+  Image Builder blueprint (intent)
+            │
+            ▼
+  cloud-init baseline (same file)
+            │
+     ┌──────┴──────┐
+     ▼             ▼
+  AWS EC2       Azure VM (optional)
+  launch-ec2.sh terraform optional
+     │             │
+     └──────┬──────┘
+            ▼
+   ./poc/run-poc.sh --remote
 ```
 
-## What you will create
+## AWS EC2 (primary — no Terraform)
 
-| Host | Cloud | Mimics Fedora Lane |
-|---|---|---|
-| `fl-poc-aws-ecom` | AWS EC2 | Cloud Linux for e-commerce-style workload |
-| `fl-poc-azure-analytics` | Azure VM | Secondary Azure footprint (EMEA-style region) |
+Full steps: [`aws/README.md`](./aws/README.md)
 
-Both use the same [`cloud-init/fl-rhel-baseline.yaml`](./cloud-init/fl-rhel-baseline.yaml) so the PoC shows **one standard across clouds** — the opposite of today’s snowflake Ubuntu/Amazon Linux mix.
+```bash
+# 1. Install + configure AWS CLI
+aws configure
+
+# 2. Launch EC2 with Fedora Lane baseline user-data
+cd poc/cloud/aws
+cp env.example env.local    # set KEY_NAME, SSH_CIDR, SSH_PRIVATE_KEY
+./launch-ec2.sh
+
+# 3. Wait ~2-3 minutes for cloud-init, then verify
+#    curl http://<PUBLIC_IP>:8080/health
+
+# 4. Inventory + PoC evidence
+cd ../../..
+./poc/cloud/scripts/write-inventory.sh
+./poc/run-poc.sh --remote
+
+# 5. Tear down
+./poc/cloud/aws/terminate-ec2.sh
+```
+
+## Azure (optional second cloud)
+
+Still available under [`azure/`](./azure/) if you want full multi-cloud.  
+You can demo **AWS-only** — `write-inventory.sh` accepts a single EC2 host.
+
+## What the EC2 instance proves
+
+| Customer challenge | EC2 PoC proof |
+|---|---|
+| Hybrid / cloud Linux sprawl | Real AWS server with approved baseline |
+| Drift / snowflakes | `/etc/fl-baseline/MARKER` matches blueprint intent |
+| Modernization | Inventory Sync API on `:8080` |
+| Security starting point | Insights client installed when image allows |
 
 ## Prerequisites
 
-- AWS account + credentials (`aws configure` or env vars)  
-- Azure account + `az login`  
-- Terraform `>= 1.5`  
-- An SSH key pair (public key path for Terraform)  
-- **RHEL subscription / pull secret story** for real RHEL images (see notes below)  
-- **Never commit** access keys, `.tfvars` with secrets, or private keys  
+- AWS account + **AWS CLI** + EC2 key pair  
+- `ssh_cidr` = your IP `/32`  
+- Never commit `env.local`, `.pem`, or access keys  
 
-## Quick path
+## Legacy Terraform (AWS)
 
-### 1. Copy example variables
-
-```bash
-cp poc/cloud/aws/terraform.tfvars.example poc/cloud/aws/terraform.tfvars
-cp poc/cloud/azure/terraform.tfvars.example poc/cloud/azure/terraform.tfvars
-# edit both: region, key name / admin username, SSH public key
-```
-
-### 2. Create AWS host
-
-```bash
-cd poc/cloud/aws
-terraform init
-terraform apply
-terraform output -json > ../../output/aws-outputs.json
-```
-
-### 3. Create Azure host
-
-```bash
-cd poc/cloud/azure
-terraform init
-terraform apply
-terraform output -json > ../../output/azure-outputs.json
-```
-
-### 4. Build remote inventory and verify
-
-```bash
-cd ../../..   # repo root
-./poc/cloud/scripts/write-inventory.sh
-./poc/run-poc.sh --remote
-```
-
-`--remote` SSHes to AWS + Azure, checks baseline markers, and curls inventory-sync on each host.
-
-### 5. Tear down (cost control)
-
-```bash
-cd poc/cloud/aws && terraform destroy
-cd ../azure && terraform destroy
-```
-
-## Image choice (important)
-
-| Option | When to use |
-|---|---|
-| **RHEL 9 BYOS/PAYG** AMI / Azure Marketplace | Closest to real Fedora Lane + Image Builder story |
-| **Rocky / Alma 9** (RHEL-compatible) | Fine for practice if you lack RHEL cloud entitlements |
-| **UBI container only** (`./poc/run-poc.sh --container`) | Laptop demo without VMs |
-
-Terraform defaults use **official RHEL 9** lookups where possible; override AMI / image in `tfvars` if your account needs Marketplace terms acceptance.
-
-## Cost / safety
-
-- Use **small** instance sizes (`t3.small` / `Standard_B1s`)  
-- Destroy after the demo  
-- Restrict SSH (`ssh_cidr` = your IP `/32`)  
-- Do not open `0.0.0.0/0` longer than the live call  
-
-## Mapping to customer challenges
-
-| Challenge | Hybrid PoC proof |
-|---|---|
-| Hybrid / multi-cloud silos | Same cloud-init baseline on AWS **and** Azure |
-| Drift | Both hosts show identical `/etc/fl-baseline/MARKER` |
-| Portability | Same inventory-sync API on both clouds |
-| Security visibility | Insights client installed (register with real account in lab) |
+Not used by default. Kept only under [`aws/terraform-optional/`](./aws/terraform-optional/) if you prefer IaC later.

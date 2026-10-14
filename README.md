@@ -37,15 +37,16 @@ Give Fedora Lane an **approved RHEL golden image** (Image Builder) plus **Insigh
 chmod +x poc/run-poc.sh poc/cloud/scripts/*.sh solution/scripts/*.sh
 ./poc/run-poc.sh                 # laptop demo
 # ./poc/run-poc.sh --container   # UBI via Podman
-# ./poc/run-poc.sh --remote      # AWS + Azure hybrid (after terraform apply)
+# ./poc/run-poc.sh --remote      # after ./poc/cloud/aws/launch-ec2.sh
 ```
 
 | Mode | Replicates |
 |---|---|
 | `--local` | Working app + baseline story on laptop |
 | `--container` | RHEL-like UBI runtime |
-| `--remote` | **AWS + Azure** servers with the same baseline (customer hybrid) |
+| `--remote` | **Amazon EC2** via AWS CLI (no Terraform) ± optional Azure |
 
+AWS EC2: [poc/cloud/aws/README.md](./poc/cloud/aws/README.md)  
 Guides: [poc/README.md](./poc/README.md) · [poc/cloud/README.md](./poc/cloud/README.md)  
 Image Builder factory: [solution/image-builder/README.md](./solution/image-builder/README.md)
 

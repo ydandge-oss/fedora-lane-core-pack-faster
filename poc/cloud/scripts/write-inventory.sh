@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build poc/output/hybrid-inventory.yml from Terraform outputs (if present).
+# Build poc/output/hybrid-inventory.yml from AWS EC2 / Azure outputs.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
@@ -10,42 +10,76 @@ INV="$OUT/hybrid-inventory.yml"
 
 mkdir -p "$OUT"
 
+json_get() {
+  local file="$1" key="$2" default="${3:-}"
+  python3 -c "
+import json,sys
+p=sys.argv[1]; k=sys.argv[2]; d=sys.argv[3]
+try:
+  data=json.load(open(p))
+  v=data.get(k,{}).get('value', d)
+  print(v if v is not None else d)
+except Exception:
+  print(d)
+" "$file" "$key" "$default"
+}
+
 AWS_IP=""
 AZ_IP=""
 AWS_SITE="aws-us-east-1"
 AZ_SITE="azure-westeurope"
+AWS_USER="ec2-user"
+AZ_USER="fladmin"
+AWS_KEY="${HOME}/.ssh/id_ed25519"
+AZ_KEY="${HOME}/.ssh/id_ed25519"
 
 if [[ -f "$AWS_OUT" ]]; then
-  AWS_IP=$(python3 -c "import json;print(json.load(open('$AWS_OUT'))['public_ip']['value'])")
-  AWS_SITE=$(python3 -c "import json;print(json.load(open('$AWS_OUT')).get('site_label',{}).get('value','aws-us-east-1'))")
+  AWS_IP=$(json_get "$AWS_OUT" public_ip)
+  AWS_SITE=$(json_get "$AWS_OUT" site_label aws-us-east-1)
+  AWS_USER=$(json_get "$AWS_OUT" ssh_user ec2-user)
+  AWS_KEY=$(json_get "$AWS_OUT" ssh_key "$HOME/.ssh/id_ed25519")
 fi
 if [[ -f "$AZ_OUT" ]]; then
-  AZ_IP=$(python3 -c "import json;print(json.load(open('$AZ_OUT'))['public_ip']['value'])")
-  AZ_SITE=$(python3 -c "import json;print(json.load(open('$AZ_OUT')).get('site_label',{}).get('value','azure-westeurope'))")
+  AZ_IP=$(json_get "$AZ_OUT" public_ip)
+  AZ_SITE=$(json_get "$AZ_OUT" site_label azure-westeurope)
+  AZ_USER=$(json_get "$AZ_OUT" ssh_user fladmin)
+  AZ_KEY=$(json_get "$AZ_OUT" ssh_key "$HOME/.ssh/id_ed25519")
 fi
 
-# Allow env overrides
 AWS_IP="${FL_AWS_IP:-$AWS_IP}"
 AZ_IP="${FL_AZURE_IP:-$AZ_IP}"
-AWS_USER="${FL_AWS_SSH_USER:-ec2-user}"
-AZ_USER="${FL_AZURE_SSH_USER:-fladmin}"
-AWS_KEY="${FL_AWS_SSH_KEY:-$HOME/.ssh/id_ed25519}"
-AZ_KEY="${FL_AZURE_SSH_KEY:-$HOME/.ssh/id_ed25519}"
+AWS_USER="${FL_AWS_SSH_USER:-$AWS_USER}"
+AZ_USER="${FL_AZURE_SSH_USER:-$AZ_USER}"
+AWS_KEY="${FL_AWS_SSH_KEY:-$AWS_KEY}"
+AZ_KEY="${FL_AZURE_SSH_KEY:-$AZ_KEY}"
 
-if [[ -z "$AWS_IP" || -z "$AZ_IP" ]]; then
+if [[ -z "$AWS_IP" ]]; then
   cat <<EOF
-Missing AWS and/or Azure IPs.
-Options:
-  1) terraform apply in poc/cloud/aws and poc/cloud/azure, then:
-       terraform output -json > poc/output/aws-outputs.json
-       terraform output -json > poc/output/azure-outputs.json
-  2) Export: FL_AWS_IP=... FL_AZURE_IP=... FL_AWS_SSH_KEY=... FL_AZURE_SSH_KEY=...
-  3) Copy poc/cloud/inventory.example.yml to poc/output/hybrid-inventory.yml and edit.
+Missing AWS EC2 public IP.
+Launch with AWS CLI (recommended):
+  cd poc/cloud/aws && cp env.example env.local   # edit
+  ./launch-ec2.sh
+
+Or set: FL_AWS_IP=... FL_AWS_SSH_KEY=...
 EOF
   exit 1
 fi
 
-cat > "$INV" <<EOF
+# Azure is optional for AWS-only demos
+if [[ -z "$AZ_IP" ]]; then
+  echo "NOTE: No Azure host found — writing AWS-only inventory for partial hybrid demo."
+  cat > "$INV" <<EOF
+hosts:
+  aws_ecom:
+    cloud: aws
+    site: ${AWS_SITE}
+    public_ip: "${AWS_IP}"
+    ssh_user: ${AWS_USER}
+    ssh_key: "${AWS_KEY}"
+    health_url: "http://${AWS_IP}:8080/health"
+EOF
+else
+  cat > "$INV" <<EOF
 hosts:
   aws_ecom:
     cloud: aws
@@ -62,6 +96,7 @@ hosts:
     ssh_key: "${AZ_KEY}"
     health_url: "http://${AZ_IP}:8080/health"
 EOF
+fi
 
 echo "Wrote $INV"
 cat "$INV"

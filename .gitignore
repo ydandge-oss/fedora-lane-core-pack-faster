@@ -50,3 +50,6 @@ override.tf
 provider.tf
 .env.aws
 .env.azure
+
+# AWS EC2 local env (contains account-specific settings)
+poc/cloud/aws/env.local

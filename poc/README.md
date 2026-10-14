@@ -30,27 +30,25 @@ podman machine start   # if needed
 ./poc/run-poc.sh --container
 ```
 
-### C. Hybrid cloud PoC (AWS + Azure) — **replicates Fedora Lane multi-cloud**
-
-Stand up one RHEL (or compatible) server in **AWS** and one in **Azure** with the **same cloud-init baseline**, then verify both:
+### C. AWS EC2 PoC — **replicates Fedora Lane cloud Linux (no Terraform)**
 
 ```bash
-# 1) Configure + apply (see poc/cloud/README.md)
-cd poc/cloud/aws && cp terraform.tfvars.example terraform.tfvars   # edit
-terraform init && terraform apply
-terraform output -json > ../../output/aws-outputs.json
+# AWS CLI required: aws configure
+cd poc/cloud/aws
+cp env.example env.local    # KEY_NAME, SSH_CIDR, SSH_PRIVATE_KEY
+./launch-ec2.sh
 
-cd ../azure && cp terraform.tfvars.example terraform.tfvars         # edit
-terraform init && terraform apply
-terraform output -json > ../../output/azure-outputs.json
-
-# 2) Verify from laptop
+# wait 2–3 min for cloud-init, then:
 cd ../../..
 ./poc/cloud/scripts/write-inventory.sh
 ./poc/run-poc.sh --remote
+
+# when finished:
+./poc/cloud/aws/terminate-ec2.sh
 ```
 
-Full guide: [cloud/README.md](./cloud/README.md)
+Optional second cloud (Azure): see [cloud/README.md](./cloud/README.md).  
+AWS EC2 details: [cloud/aws/README.md](./cloud/aws/README.md)
 
 > Full Image Builder compose (`composer-cli`) still needs a real RHEL builder host for qcow2/AMI factory demos. Cloud VMs prove the *same baseline across AWS + Azure* — matching the customer’s hybrid story.
 
