@@ -1,95 +1,55 @@
-# 15-minute script — Part 1 (Video / RHSH recording)  
-## Server/Cloud OS TDP · Junior Consultant · Gold Image
+# 15-minute script — Part 1 (Video)  
+## Dual path: Kickstart + Image Mode
 
 **Presenter:** Yash Dandge  
-**Submit:** RHSH recording + GitHub link + docs — select **Server/Cloud OS TDP**
+**Submit:** Server/Cloud OS TDP + GitHub `expansion-tdp-solution`
 
-> Pre-record checklist: cloud VM up; SSH key ready; `curl :35443` works; verify script copied to VM.
+> Pre-record: one cloud VM fully working (Path A **or** B). Have the other path open in the IDE.
 
 ---
 
 ## Opening (1:30)
 
-“This is my Part 1 for the Fedora Lane Server/Cloud OS Expansion Pack.  
-Fedora Lane runs about **1,600 servers** — 900 on-prem, 600 in AWS/Azure, 100 in boutiques — on Rocky, Ubuntu, CentOS Stream, and Amazon Linux. That inconsistency breaks patching, hides admin changes, and leaves ops struggling with containers.
+“Fedora Lane has about **1,600 servers** on mixed Linux — patches fail, changes aren’t traceable, and containers stress ops.
 
-I’m Yash Dandge, Junior Consultant. I built a **manual RHEL gold image** for their e-commerce web fleet — Kickstart-based, not hosted Image Builder — and deployed it to the cloud.
-
-Today: walk through the image live, then map value to their three challenges.”
+I’m Yash Dandge. We designed **two manual gold-image factories** — **Kickstart** and **RHEL 10 Image Mode** — neither uses hosted Image Builder. I’ll prove one live on cloud and show how both meet the Expansion Pack.”
 
 ---
 
-## Live walkthrough (8:00)
+## Walkthrough (8:00)
 
-### 1. Challenges → approach (1:00)
+### 1. Dual-path diagram (1:00)
 
-“One RHEL gold image: separate log/home/tmp volumes, SELinux enforcing, SSH 2222, httpd **container** on 35443, firewall locked down, admins in `fladmins` with passworded sudo.”
+Show `docs/kickstart-vs-image-mode.md` or architecture from solution overview.
 
-### 2. Show repo / Kickstart (1:30)
+“Kickstart = install recipe. Image Mode = bootable OS container converted locally to a disk.”
 
-Open GitHub `expansion-tdp-solution` → `solution/kickstart/fl-rhel-gold.ks`.
+### 2. Live prove primary path (5:00)
 
-“Partitions under 5 GiB each for `/var/log`, `/home`, `/tmp`, `/var/tmp` with **noexec** on tmp paths. Security settings match the Expansion Pack checklist.”
+SSH `:2222` → `verify-gold-image.sh` → `curl :35443` → `podman ps` → mounts / SELinux.
 
-### 3. SSH into cloud VM (2:00)
+### 3. Secondary path in Git (2:00)
 
-```bash
-ssh -i ~/.ssh/fl-gold-admin -p 2222 fladmin1@<CLOUD_IP>
-getenforce
-findmnt /var/log /home /tmp /var/tmp
-ss -ltn | grep -E '2222|35443'
-```
+If primary was Kickstart, open `solution/image-mode/Containerfile` + `build-bootc.sh`.  
+If primary was Image Mode, open `solution/kickstart/fl-rhel-gold.ks`.
 
-**Tell → show → tell:** hardened, consistent host — not a boutique snowflake.
-
-### 4. Containerized httpd (2:00)
-
-```bash
-podman ps
-systemctl status fl-httpd --no-pager || true
-curl -s http://127.0.0.1:35443/ | head
-```
-
-From laptop browser: `http://<CLOUD_IP>:35443/`
-
-“Ops manage this with systemd — not a fragile multi-line podman command from a developer.”
-
-### 5. Verify script / reboot story (1:30)
-
-```bash
-sudo bash verify-gold-image.sh
-# mention: survived reboot in PoC; services enabled at boot
-```
+“Same ports, users, httpd container, firewall — different factory. Image Mode is how we’d scale Day-2 across the fleet.”
 
 ---
 
-## Value summary (3:00)
+## Value (3:00)
 
-| Challenge | Value shown |
+| Challenge | Message |
 |---|---|
-| Inconsistency / failed patches | One RHEL standard for web tier |
-| Untraceable changes | Key-only SSH, no root, sudo always prompts |
-| Container gap | httpd as systemd-managed container |
-
-“Future: Session Recording and Web Console for deeper audit; OpenSCAP CIS stretch; second cloud image.”
+| Inconsistency | One RHEL web gold image |
+| Change / MTTR | Hardened SSH + sudo |
+| Containers | httpd as systemd service |
+| Scale | Image Mode for ~1,600-host future |
 
 ---
 
 ## Closing (1:30)
 
-“Core message: Fedora Lane’s web fleet needs a **manual RHEL gold image** that is secure, partitioned, and container-ready — proven on cloud.
+“Pilot with Kickstart or Image Mode on OPEN cloud; standardize the web tier; grow Image Mode for fleet updates.
 
-**One next step:** pilot this AMI/image on non-prod e-commerce web nodes with Casey and Alex.
-
-Repo and docs are in the submission form. Thank you.”
-
----
-
-## Timing
-
-| Segment | Target |
-|---|---|
-| Opening | 1:30 |
-| Walkthrough | 8:00 |
-| Value | 3:00 |
-| Closing | 1:30 |
+Repo: `expansion-tdp-solution`. Thank you.”

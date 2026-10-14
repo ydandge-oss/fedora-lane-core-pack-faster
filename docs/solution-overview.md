@@ -1,68 +1,65 @@
-# Solution Overview — RHEL Gold Image for Fedora Lane  
+# Solution Overview — Dual RHEL Gold Image Factories  
 ## Server/Cloud OS Expansion Pack · Junior Consultant
 
 ## 1. Purpose
 
-Design and demonstrate a **secure, standardized, operationally resilient RHEL gold image** that becomes the foundation for Fedora Lane’s **e-commerce web server fleet**. The image is built **manually** (Kickstart / local VM — not hosted Image Builder), deployed to **AWS or Azure**, and proven to survive reboot with all Expansion Pack controls in place.
+Give Fedora Lane a **secure, standardized RHEL gold image** for the e-commerce web fleet, addressing:
 
-## 2. Challenges addressed (Expansion Pack)
+1. Inconsistent estate (~1,600 servers / mixed OS)  
+2. Untraceable changes / long outages  
+3. Ops skills gap for containers  
 
-| Challenge | Pain today | How the gold image helps |
+We deliver **two manual factories** (neither uses hosted Image Builder):
+
+| Path | Factory | Role |
 |---|---|---|
-| **1. Inconsistent server environment** | ~1,600 servers; Rocky/Ubuntu/CentOS Stream/Amazon Linux; patch fails on 600+ hosts | One **RHEL** birth certificate for web tier; same packages, partitions, SELinux, ports everywhere |
-| **2. Untraceable changes / long outages** | Undocumented SSH tweaks; high MTTR | Hardened SSH (key-only, non-standard port, no root); sudo always authenticated; consistent baseline reduces “mystery drift.” Pair with Session Recording / Web Console in ops phase |
-| **3. Container skills gap** | Complex `podman run` typos; ops depend on developers | **httpd runs as a container** managed by **systemd/Quadlet** — start/stop/status like any service, not a fragile one-liner |
+| **A** | Kickstart | Fast, checklist-native gold image |
+| **B** | RHEL 10 Image Mode (bootc) | Same controls; better path to operate at fleet scale |
 
-## 3. Architecture
+## 2. Architecture
 
+```text
+                    Expansion Pack controls
+                 (partitions, SELinux, 2222, 35443,
+                  fladmins, firewall, httpd container)
+                           │
+           ┌───────────────┴───────────────┐
+           ▼                               ▼
+   Path A Kickstart                 Path B Image Mode
+   fl-rhel-gold.ks                  Containerfile (rhel-bootc)
+           │                               │
+           ▼                               ▼
+    libvirt / qemu-img              local bootc-image-builder
+           │                               │
+           └───────────────┬───────────────┘
+                           ▼
+              AWS or Azure Blank OPEN VM
+                           │
+                           ▼
+                 verify-gold-image.sh
 ```
-Kickstart (manual) → Gold disk image
-        │
-        ▼
-   Import AMI (AWS)  or  VHD image (Azure)
-        │
-        ▼
-   Cloud VM from gold image
-        ├─ SSH :2222 (keys, no root, no passwords)
-        ├─ Podman httpd container :35443
-        ├─ SELinux enforcing
-        ├─ /var/log /home /tmp(noexec) /var/tmp separate LVs
-        └─ firewalld: only 2222 + 35443
-```
 
-## 4. Design decisions
+## 3. Challenge mapping
 
-| Decision | Why |
-|---|---|
-| Manual Kickstart | Expansion Pack forbids hosted Image Builder |
-| httpd **in container** | Meets “if possible” ask + addresses Challenge 3 with systemd-managed Podman |
-| Ports 2222 / 35443 | Spec + reduces noisy scanning on defaults |
-| Separate small volumes | Protect root from log/tmp fill-up |
-| fladmins + passworded sudo | Least privilege + accountability |
-| AWS **or** Azure first | Meets must-have; second cloud is stretch |
+| Challenge | Both paths | Extra Image Mode value |
+|---|---|---|
+| Inconsistency | One RHEL web baseline | Registry-based OS updates toward 1,600 hosts |
+| Untraceable changes | Hardened SSH + sudo | Immutable-root posture reduces snowflake edits |
+| Container skills gap | httpd via Podman + systemd | OS itself is container-native (ops skill bridge) |
 
-## 5. Challenge → demo mapping
+## 4. What we implemented
 
-| Challenge | Demo moment |
-|---|---|
-| Inconsistency | Show identical marker + mounts + ports on cloud VM from gold image |
-| Outage / change risk | Show SSH hardening + sudo rules; explain reduced snowflake surface |
-| Containers | `podman ps` + `systemctl status fl-httpd` + curl :35443 |
+**Path A:** `solution/kickstart/fl-rhel-gold.ks` + harden/verify scripts + httpd container  
+**Path B:** `solution/image-mode/` bootc Containerfile + `bib-config.toml` + build scripts  
+**Shared:** cloud deploy docs, presentations, verification checklist  
 
-## 6. Fleet context (Expansion Pack numbers)
+## 5. Recommended customer journey
 
-| Location | Approx. count |
-|---|---:|
-| On-prem VMs | 900 |
-| AWS + Azure | 600 |
-| Boutiques | 100 |
-| **Total** | **~1,600** |
+1. Pilot web tier with **Kickstart** gold image (Path A) on non-prod.  
+2. Adopt **Image Mode** (Path B) for broader fleet consistency and Day-2 updates.  
+3. Stretch: OpenSCAP CIS; dual AWS+Azure images.  
 
-This gold image is the **web-tier standard** to stop OS diversity and failed mass patching.
+## 6. Demo plan
 
-## 7. Next phase recommendations
-
-1. Roll gold image to non-prod web fleet; measure patch success rate.  
-2. Enable **Session Recording** + Web Console for Challenge 2 visibility.  
-3. Pipeline rebuilds when CVEs land (still manual-compose friendly).  
-4. Stretch: CIS via OpenSCAP; dual AWS+Azure images.  
+Live-prove **one** path on cloud; show the other path’s source and scale message.  
+Scripts: `docs/presentation-script-part1-video.md` / `part2-live.md`.

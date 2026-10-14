@@ -12,7 +12,7 @@ Thank you for the time on [date] discussing the Server/Cloud OS Expansion Pack s
 
 ## Overview
 
-We demonstrated a **manually built RHEL gold image** for Fedora Lane’s e-commerce web fleet, addressing:
+We demonstrated a **manually built RHEL gold image** for Fedora Lane’s e-commerce web fleet (and documented a second factory using **RHEL 10 Image Mode / bootc**), addressing:
 
 1. Inconsistent server environment (~1,600 hosts / mixed OS)  
 2. Untraceable administrative changes and extended outages  

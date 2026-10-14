@@ -1,7 +1,10 @@
 # SME Q&A — Casey / Alex (Server/Cloud OS)
 
 ### Why not hosted Image Builder?
-Expansion Pack requires a **manual** gold image. Kickstart gives Fedora Lane a reviewable, offline-capable factory.
+Expansion Pack requires a **manual** gold image. We use Kickstart and/or **local** Image Mode (`bootc` + local `bootc-image-builder`) — not console.redhat.com hosted builds.
+
+### Kickstart or Image Mode?
+Kickstart = fastest checklist-native gold image. Image Mode = better Day-2 for ~1,600 hosts. Same security controls; pick one to prove live, keep both in Git.
 
 ### Why will this fix the 600 failed patches story?
 One OS major/minor + one agent/tooling baseline on the web tier removes “wrong libraries / missing agent / custom kernels” variance for that fleet segment.

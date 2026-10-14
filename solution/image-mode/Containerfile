@@ -1,0 +1,88 @@
+# Fedora Lane — RHEL 10 Image Mode (bootc) gold image
+# Build locally with Podman. Do NOT use hosted console.redhat.com Image Builder.
+#
+#   podman login registry.redhat.io
+#   ./scripts/build-bootc.sh
+#
+# Base: https://catalog.redhat.com (rhel10/rhel-bootc)
+
+FROM registry.redhat.io/rhel10/rhel-bootc:latest
+
+LABEL name="fl-rhel10-bootc-gold" \
+      summary="Fedora Lane Server/Cloud OS gold image (Image Mode)" \
+      maintainer="FASTER Junior Consultant practice"
+
+# --- Packages for Expansion Pack controls ---
+RUN dnf -y install \
+      firewalld \
+      policycoreutils-python-utils \
+      setools-console \
+      audit \
+      chrony \
+      sudo \
+      openssh-server \
+      podman \
+      container-tools \
+      curl \
+      jq \
+      vim-enhanced \
+    && dnf clean all
+
+# --- Admin group + users (set passwords/keys before sealing for cloud) ---
+RUN groupadd -f fladmins \
+ && id fladmin1 >/dev/null 2>&1 || useradd -m -G fladmins,wheel fladmin1 \
+ && id fladmin2 >/dev/null 2>&1 || useradd -m -G fladmins,wheel fladmin2 \
+ && mkdir -p /etc/sudoers.d \
+ && printf '%s\n' \
+      'Defaults:%fladmins timestamp_timeout=0' \
+      '%fladmins ALL=(ALL) ALL' \
+      > /etc/sudoers.d/fladmins \
+ && chmod 0440 /etc/sudoers.d/fladmins \
+ && printf '%s\n' '%wheel ALL=(ALL) ALL' > /etc/sudoers.d/wheel-password \
+ && chmod 0440 /etc/sudoers.d/wheel-password
+
+# --- SSH 2222 harden ---
+COPY config/sshd-fl-gold.conf /etc/ssh/sshd_config.d/00-fl-gold.conf
+RUN mkdir -p /home/fladmin1/.ssh /home/fladmin2/.ssh \
+ && chmod 700 /home/fladmin1/.ssh /home/fladmin2/.ssh \
+ && touch /home/fladmin1/.ssh/authorized_keys /home/fladmin2/.ssh/authorized_keys \
+ && chmod 600 /home/fladmin1/.ssh/authorized_keys /home/fladmin2/.ssh/authorized_keys \
+ && chown -R fladmin1:fladmin1 /home/fladmin1/.ssh \
+ && chown -R fladmin2:fladmin2 /home/fladmin2/.ssh \
+ && echo 'ssh-ed25519 AAAAREPLACE_WITH_REAL_PUBLIC_KEY fladmin@fedorlane-gold' \
+      | tee /home/fladmin1/.ssh/authorized_keys /home/fladmin2/.ssh/authorized_keys >/dev/null \
+ && chown fladmin1:fladmin1 /home/fladmin1/.ssh/authorized_keys \
+ && chown fladmin2:fladmin2 /home/fladmin2/.ssh/authorized_keys \
+ && semanage port -a -t ssh_port_t -p tcp 2222 || semanage port -m -t ssh_port_t -p tcp 2222 \
+ && semanage port -a -t http_port_t -p tcp 35443 || semanage port -m -t http_port_t -p tcp 35443
+
+# --- Firewall: only 2222 + 35443 ---
+COPY config/fl-firewall.xml /etc/firewalld/zones/fl-gold.xml
+RUN systemctl enable firewalld sshd chronyd \
+ && mkdir -p /etc/firewalld \
+ && printf '%s\n' 'DefaultZone=fl-gold' >> /etc/firewalld/firewalld.conf || true
+
+# --- httpd in container (Expansion Pack preferred) ---
+COPY html/ /opt/fl/httpd-gold/html/
+COPY config/fl-httpd.container /etc/containers/systemd/fl-httpd.container
+COPY config/fl-httpd.image /etc/containers/systemd/fl-httpd.image
+COPY config/fl-gold-firstboot.service /etc/systemd/system/fl-gold-firstboot.service
+COPY config/fl-gold-firstboot.sh /usr/local/sbin/fl-gold-firstboot.sh
+RUN chmod 755 /usr/local/sbin/fl-gold-firstboot.sh \
+ && systemctl enable fl-gold-firstboot.service \
+ && mkdir -p /etc/fl-gold \
+ && printf '%s\n' \
+      'Fedora Lane RHEL 10 Image Mode gold image' \
+      'SSH:2222 | httpd container:35443 | SELinux:enforcing' \
+      'Path: bootc (not hosted Image Builder)' \
+      > /etc/fl-gold/MARKER
+
+# --- Extra mount options helper (noexec /tmp) applied at first boot if volumes exist ---
+COPY config/fl-tmp-noexec.conf /etc/systemd/system/tmp.mount.d/fl-noexec.conf
+RUN mkdir -p /etc/systemd/system/tmp.mount.d
+
+# SELinux enforcing (RHEL default; pin for clarity)
+RUN sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config || true
+
+# Lint bootc image where available
+RUN bootc container lint || true

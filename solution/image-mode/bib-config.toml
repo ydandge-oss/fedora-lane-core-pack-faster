@@ -1,0 +1,33 @@
+# bootc-image-builder customizations for Fedora Lane Expansion Pack mounts
+# Each required mount under 5 GiB. Adjust if your BIB version uses slightly different keys.
+# Ref: RHEL 10 "Using image mode for RHEL" + bootc-image-builder docs
+
+[[customizations.user]]
+name = "fladmin1"
+groups = ["fladmins", "wheel"]
+# Add your SSH public key before build:
+# key = "ssh-ed25519 AAAA... fladmin@fedorlane-gold"
+
+[[customizations.user]]
+name = "fladmin2"
+groups = ["fladmins", "wheel"]
+
+[[customizations.filesystem]]
+mountpoint = "/"
+minsize = "12 GiB"
+
+[[customizations.filesystem]]
+mountpoint = "/var/log"
+minsize = "4 GiB"
+
+[[customizations.filesystem]]
+mountpoint = "/home"
+minsize = "4 GiB"
+
+[[customizations.filesystem]]
+mountpoint = "/tmp"
+minsize = "2 GiB"
+
+[[customizations.filesystem]]
+mountpoint = "/var/tmp"
+minsize = "2 GiB"

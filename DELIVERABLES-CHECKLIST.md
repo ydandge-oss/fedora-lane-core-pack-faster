@@ -2,13 +2,15 @@
 
 ## Technical
 
-- [ ] Manual gold image built (Kickstart or documented interactive + harden)  
-- [ ] All Expansion Pack security/partition/port requirements verified  
+- [ ] **Path A** Kickstart assets ready (`solution/kickstart/`)  
+- [ ] **Path B** Image Mode assets ready (`solution/image-mode/`)  
+- [ ] At least **one** path built end-to-end (manual; not hosted Image Builder)  
+- [ ] All Expansion Pack security/partition/port requirements verified on cloud VM  
 - [ ] httpd container on 35443 with index.html  
 - [ ] Image uploaded; VM on AWS **or** Azure Blank OPEN  
 - [ ] Survives reboot  
 - [ ] GitHub private (+ `mflaim-eng`); no secrets  
-- [ ] `docs/solution-overview.md` complete  
+- [ ] `docs/solution-overview.md` + dual-path PoC docs complete  
 
 ## Presentations
 

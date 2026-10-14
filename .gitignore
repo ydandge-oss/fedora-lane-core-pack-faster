@@ -38,6 +38,7 @@ tmp/
 
 # PoC outputs / local venv
 poc/output/
+solution/image-mode/output/
 
 # Terraform local state / secrets
 **/.terraform/

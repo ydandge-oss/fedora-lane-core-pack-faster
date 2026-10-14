@@ -1,0 +1,12 @@
+[Unit]
+Description=Fedora Lane Image Mode gold firstboot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/fl-gold-firstboot.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
