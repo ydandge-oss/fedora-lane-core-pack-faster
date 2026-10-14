@@ -1,0 +1,17 @@
+---
+# Shared variables for the Fedora Lane consistency pilot
+ntp_servers:
+  - time.google.com
+  - time.cloudflare.com
+
+common_packages:
+  - curl
+  - jq
+
+sshd_password_authentication: "no"
+sshd_permit_root_login: "no"
+
+motd_banner: |
+  Unauthorized access prohibited.
+  Fedora Lane — managed baseline ({{ fl_pilot }})
+  Site: {{ fl_site | default('unknown') }}

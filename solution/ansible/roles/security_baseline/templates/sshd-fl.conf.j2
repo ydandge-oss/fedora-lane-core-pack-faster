@@ -1,0 +1,10 @@
+# Fedora Lane security baseline snippet — {{ inventory_hostname }}
+# Intended for inclusion under /etc/ssh/sshd_config.d/ (production)
+PasswordAuthentication {{ sshd_password_authentication }}
+PermitRootLogin {{ sshd_permit_root_login }}
+PubkeyAuthentication yes
+ChallengeResponseAuthentication no
+UsePAM yes
+X11Forwarding no
+ClientAliveInterval 300
+ClientAliveCountMax 2

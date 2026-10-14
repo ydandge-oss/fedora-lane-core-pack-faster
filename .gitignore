@@ -1,0 +1,37 @@
+# Secrets / local env — never commit
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+kubeconfig*
+pull-secret*
+*.kubeconfig
+vault.yml
+vault.yaml
+*.vault
+group_vars/**/vault.yml
+
+# Local Ansible / Python
+.venv/
+venv/
+solution/**/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ansible/
+*.retry
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Build / runtime
+dist/
+build/
+*.log
+tmp/
+.docker/

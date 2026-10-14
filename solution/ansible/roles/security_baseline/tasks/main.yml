@@ -1,0 +1,20 @@
+---
+- name: Render SSHD hardened snippet (demo artifact under /tmp)
+  ansible.builtin.template:
+    src: sshd-fl.conf.j2
+    dest: /tmp/fl-sshd-{{ inventory_hostname }}.conf
+    mode: "0644"
+
+- name: Render MOTD / login banner (demo artifact under /tmp)
+  ansible.builtin.copy:
+    content: "{{ motd_banner }}"
+    dest: /tmp/fl-motd-{{ inventory_hostname }}.txt
+    mode: "0644"
+
+- name: Assert least-privilege oriented SSH defaults are defined
+  ansible.builtin.assert:
+    that:
+      - sshd_password_authentication == "no"
+      - sshd_permit_root_login == "no"
+    fail_msg: "Security baseline vars drifted — investigate group_vars"
+    success_msg: "Security baseline vars OK for {{ inventory_hostname }}"

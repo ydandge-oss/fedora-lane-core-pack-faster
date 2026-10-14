@@ -1,0 +1,16 @@
+services:
+  inventory-sync:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Demo-only token — replace via env / secrets manager in real use
+      SYNC_API_TOKEN: "demo-not-a-real-secret"
+      FL_ENV: "pilot"
+      SAP_SYSTEM: "S4HANA-FL-NA"
+      POS_REGION: "multi"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
