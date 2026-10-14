@@ -34,17 +34,20 @@ Give Fedora Lane an **approved RHEL golden image** (Image Builder) plus **Insigh
 ## Proof of Concept (run this for demos)
 
 ```bash
-chmod +x poc/run-poc.sh solution/scripts/*.sh
-./poc/run-poc.sh
-# Opens/writes: poc/output/evidence-report.md
-# API stays on http://127.0.0.1:8080 — stop with: ./poc/run-poc.sh --cleanup
+chmod +x poc/run-poc.sh poc/cloud/scripts/*.sh solution/scripts/*.sh
+./poc/run-poc.sh                 # laptop demo
+# ./poc/run-poc.sh --container   # UBI via Podman
+# ./poc/run-poc.sh --remote      # AWS + Azure hybrid (after terraform apply)
 ```
 
-Full PoC guide: [poc/README.md](./poc/README.md)
+| Mode | Replicates |
+|---|---|
+| `--local` | Working app + baseline story on laptop |
+| `--container` | RHEL-like UBI runtime |
+| `--remote` | **AWS + Azure** servers with the same baseline (customer hybrid) |
 
-Optional UBI container mode (needs Podman machine): `./poc/run-poc.sh --container`
-
-Image Builder compose (real RHEL builder): [solution/image-builder/README.md](./solution/image-builder/README.md).
+Guides: [poc/README.md](./poc/README.md) · [poc/cloud/README.md](./poc/cloud/README.md)  
+Image Builder factory: [solution/image-builder/README.md](./solution/image-builder/README.md)
 
 ---
 

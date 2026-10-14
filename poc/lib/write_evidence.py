@@ -52,7 +52,11 @@ def main() -> int:
             },
             {
                 "challenge": "Hybrid / multi-cloud inconsistency",
-                "proof": "Same baseline profile intended for VA, Frankfurt, boutique, and cloud",
+                "proof": (
+                    "AWS + Azure hosts verified with the same baseline marker and healthy API"
+                    if mode == "remote"
+                    else "Same baseline profile intended for VA, Frankfurt, boutique, AWS, and Azure; use --remote after terraform apply"
+                ),
             },
         ],
         "stakeholder_value": {

@@ -14,11 +14,12 @@ log() { echo "[poc] $*" | tee -a "$OUT/poc.log"; }
 
 usage() {
   cat <<EOF
-Usage: ./poc/run-poc.sh [--local|--container] [--cleanup]
+Usage: ./poc/run-poc.sh [--local|--container|--remote] [--cleanup]
 
   --local       Laptop PoC with uvicorn (default)
   --container   UBI9 stand-in via Podman
-  --cleanup     Stop API / remove PoC container
+  --remote      Verify AWS + Azure hosts (hybrid customer-like PoC)
+  --cleanup     Stop local API / remove PoC container
 EOF
 }
 
@@ -26,6 +27,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --local) MODE="local"; shift ;;
     --container) MODE="container"; shift ;;
+    --remote) MODE="remote"; shift ;;
     --cleanup) CLEANUP_ONLY=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 1 ;;
@@ -43,7 +45,6 @@ cleanup() {
   if command -v podman >/dev/null 2>&1; then
     podman rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
   fi
-  # Also clear local uvicorn if we tracked a pidfile
   if [[ -f "$OUT/uvicorn.pid" ]]; then
     kill "$(cat "$OUT/uvicorn.pid")" 2>/dev/null || true
     rm -f "$OUT/uvicorn.pid"
@@ -62,20 +63,61 @@ log "Root: $ROOT"
 log "Mode: $MODE"
 
 # --- 1. Validate blueprint ---
-log "Step 1/5 — Validate Image Builder blueprint"
+log "Step 1 — Validate Image Builder blueprint"
 bash "$ROOT/solution/scripts/validate-blueprint.sh" | tee -a "$OUT/poc.log"
 
 # --- 2. Snowflake vs baseline ---
-log "Step 2/5 — Compare snowflake vs baseline profiles"
+log "Step 2 — Compare snowflake vs baseline profiles"
 python3 "$POC/lib/compare_profiles.py" | tee -a "$OUT/poc.log"
 
 # --- 3. Simulated Insights ---
-log "Step 3/5 — Simulate Insights registration evidence"
+log "Step 3 — Simulate Insights registration evidence"
 python3 "$POC/lib/simulate_insights.py" | tee -a "$OUT/poc.log"
 
-# --- 4. Working deployment ---
-log "Step 4/5 — Start Boutique Inventory Sync on baseline runtime"
 HEALTH_JSON=""
+
+if [[ "$MODE" == "remote" ]]; then
+  log "Step 4 — Verify AWS + Azure hybrid hosts"
+  if [[ ! -f "$OUT/hybrid-inventory.yml" ]]; then
+    log "Inventory missing — trying write-inventory.sh"
+    bash "$POC/cloud/scripts/write-inventory.sh" | tee -a "$OUT/poc.log"
+  fi
+  python3 "$POC/cloud/scripts/verify-remote.py" | tee -a "$OUT/poc.log"
+  if [[ -f "$OUT/hybrid-remote-evidence.json" ]]; then
+    HEALTH_JSON=$(OUT_JSON="$OUT/hybrid-remote-evidence.json" python3 -c '
+import json, os
+from pathlib import Path
+data = json.loads(Path(os.environ["OUT_JSON"]).read_text())
+print(json.dumps({
+  "status": "ok",
+  "mode": "remote-hybrid",
+  "hosts": [
+    {
+      "name": h["name"],
+      "cloud": h["cloud"],
+      "site": h["site"],
+      "api": h["api_health"],
+      "baseline_ok": h["baseline_ok"],
+    } for h in data.get("hosts", [])
+  ]
+}))
+')
+  fi
+  log "Step 5 — Write evidence report"
+  python3 "$POC/lib/write_evidence.py" "$MODE" "$HEALTH_JSON" | tee -a "$OUT/poc.log"
+  trap - EXIT
+  echo
+  echo "============================================================"
+  echo " Hybrid PoC SUCCESS — show:"
+  echo "   $OUT/evidence-report.md"
+  echo "   $OUT/hybrid-remote-evidence.json"
+  echo "============================================================"
+  cat "$OUT/evidence-report.md"
+  exit 0
+fi
+
+# --- 4. Local / container working deployment ---
+log "Step 4 — Start Boutique Inventory Sync on baseline runtime"
 
 if [[ "$MODE" == "container" ]]; then
   if ! command -v podman >/dev/null 2>&1; then
@@ -97,7 +139,6 @@ if [[ "$MODE" == "container" ]]; then
     sleep 1
   done
 else
-  # Use /tmp for venv so sandbox / sync tools don't break include/ symlinks
   VENV="${FL_POC_VENV:-/tmp/fedora-lane-poc-venv}"
   if [[ ! -x "$VENV/bin/uvicorn" ]]; then
     python3 -m venv "$VENV"
@@ -135,8 +176,7 @@ log "Sync status: $STATUS_JSON"
 SYNC_JSON=$(curl -sf -X POST http://127.0.0.1:8080/api/v1/sync/run -H "X-Api-Token: demo-not-a-real-secret")
 log "Sync run: $SYNC_JSON"
 
-# --- 5. Evidence pack ---
-log "Step 5/5 — Write evidence report"
+log "Step 5 — Write evidence report"
 python3 "$POC/lib/write_evidence.py" "$MODE" "$HEALTH_JSON" | tee -a "$OUT/poc.log"
 
 echo
@@ -147,10 +187,10 @@ echo "============================================================"
 echo
 cat "$OUT/evidence-report.md"
 
-# Keep API up for interactive demo unless FL_POC_KEEP=0
 if [[ "${FL_POC_KEEP:-1}" == "1" ]]; then
   trap - EXIT
   echo
   echo "API still running on http://127.0.0.1:8080 for live demo."
   echo "Stop with: ./poc/run-poc.sh --cleanup"
+  echo "Hybrid cloud next: see poc/cloud/README.md then ./poc/run-poc.sh --remote"
 fi

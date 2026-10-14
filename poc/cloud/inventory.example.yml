@@ -1,0 +1,18 @@
+# Copy to poc/output/hybrid-inventory.yml (gitignored) after terraform apply
+# Or generate with: ./poc/cloud/scripts/write-inventory.sh
+
+hosts:
+  aws_ecom:
+    cloud: aws
+    site: aws-us-east-1
+    public_ip: "x.x.x.x"
+    ssh_user: ec2-user
+    ssh_key: "~/.ssh/your-aws-key.pem"
+    health_url: "http://x.x.x.x:8080/health"
+  azure_analytics:
+    cloud: azure
+    site: azure-westeurope
+    public_ip: "y.y.y.y"
+    ssh_user: fladmin
+    ssh_key: "~/.ssh/id_ed25519"
+    health_url: "http://y.y.y.y:8080/health"

@@ -13,36 +13,46 @@
 | Security / audit story starts at birth | Simulated Insights registration + evidence report |
 | Hybrid sites share one standard | Same baseline applied to modeled VA / Frankfurt / boutique / cloud hosts |
 
-## Two ways to run
+## Ways to run
 
-### A. Laptop PoC (no Podman / no RHEL builder) — **recommended for Part 1 recording**
+### A. Laptop PoC — **recommended for Part 1 recording**
 
 ```bash
-cd /Users/ydandge/Documents/fedora-lane-core-pack-faster
 ./poc/run-poc.sh
 ```
 
-This will:
+Validates blueprint, compares snowflake vs baseline, starts inventory-sync locally, writes `poc/output/evidence-report.md`.
 
-1. Validate the Image Builder blueprint  
-2. Compare snowflake vs baseline profiles  
-3. Start the inventory-sync API locally  
-4. Hit `/health`, `/api/v1/sync/status`, and a secured sync run  
-5. Write an evidence pack under `poc/output/`
-
-### B. UBI container PoC (RHEL-like runtime via Podman)
+### B. UBI container PoC (Podman)
 
 ```bash
-# once per machine
-podman machine init   # if needed
-podman machine start
-
+podman machine start   # if needed
 ./poc/run-poc.sh --container
 ```
 
-Builds `poc/Containerfile` (UBI 9) as a **stand-in** for the golden image, runs inventory-sync inside it, prints evidence.
+### C. Hybrid cloud PoC (AWS + Azure) — **replicates Fedora Lane multi-cloud**
 
-> Full Image Builder compose (`composer-cli`) still needs a real RHEL builder host. This PoC proves the *pattern*; lab compose is the production-shaped next step (see `solution/image-builder/README.md`).
+Stand up one RHEL (or compatible) server in **AWS** and one in **Azure** with the **same cloud-init baseline**, then verify both:
+
+```bash
+# 1) Configure + apply (see poc/cloud/README.md)
+cd poc/cloud/aws && cp terraform.tfvars.example terraform.tfvars   # edit
+terraform init && terraform apply
+terraform output -json > ../../output/aws-outputs.json
+
+cd ../azure && cp terraform.tfvars.example terraform.tfvars         # edit
+terraform init && terraform apply
+terraform output -json > ../../output/azure-outputs.json
+
+# 2) Verify from laptop
+cd ../../..
+./poc/cloud/scripts/write-inventory.sh
+./poc/run-poc.sh --remote
+```
+
+Full guide: [cloud/README.md](./cloud/README.md)
+
+> Full Image Builder compose (`composer-cli`) still needs a real RHEL builder host for qcow2/AMI factory demos. Cloud VMs prove the *same baseline across AWS + Azure* — matching the customer’s hybrid story.
 
 ## Demo script (≈ 5 minutes inside your 15-min talk)
 

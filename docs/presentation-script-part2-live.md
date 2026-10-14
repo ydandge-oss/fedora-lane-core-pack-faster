@@ -46,6 +46,14 @@ curl -s http://127.0.0.1:8080/health | jq .
 curl -s http://127.0.0.1:8080/api/v1/sync/status | jq .
 ```
 
+### Optional hybrid proof (if AWS + Azure VMs are up) (45s)
+
+“Same cloud-init baseline on an AWS e-commerce-style host and an Azure secondary-region host — curl `/health` on both. That’s Fedora Lane’s multi-cloud story with one standard.”
+
+```bash
+./poc/run-poc.sh --remote
+```
+
 ### What we didn’t do (30s)
 
 “No SAP migration, no Ansible dependency, no claim we solved post-day-0 drift forever — that’s Phase 2.”
