@@ -35,3 +35,6 @@ build/
 *.log
 tmp/
 .docker/
+
+# PoC outputs / local venv
+poc/output/

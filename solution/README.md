@@ -22,7 +22,17 @@ Practice build for Fedora Lane when the TDP option is **RHEL** and automation co
 5. Run **inventory-sync** on that host and curl `/health`.  
 6. Map each step to Core Pack challenges (drift, CVE patching, audit, modernization).
 
-## Quick start — sample app (works on laptop or RHEL)
+## Proof of Concept
+
+From the repo root:
+
+```bash
+./poc/run-poc.sh
+```
+
+See [poc/README.md](../poc/README.md) for local vs UBI/Podman modes and the evidence pack.
+
+## Quick start — sample app only (works on laptop or RHEL)
 
 ```bash
 cd inventory-sync

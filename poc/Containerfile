@@ -1,0 +1,32 @@
+# Fedora Lane PoC — RHEL-like baseline stand-in using UBI 9
+# Build from repository root:
+#   podman build -f poc/Containerfile -t fl-rhel-baseline-poc:latest .
+
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5
+
+LABEL name="fl-rhel-baseline-poc" \
+      summary="Fedora Lane RHEL baseline PoC (UBI stand-in)" \
+      io.k8s.description="Practice PoC for FASTER Junior Consultant RHEL TDP"
+
+RUN microdnf -y install python3 python3-pip curl jq \
+    && microdnf clean all \
+    && mkdir -p /opt/fl/inventory-sync /etc/fl-baseline
+
+COPY poc/baseline-marker.txt /etc/fl-baseline/MARKER
+COPY poc/profiles/baseline-rhel.env /etc/fl-baseline/baseline.env
+
+WORKDIR /opt/fl/inventory-sync
+COPY solution/inventory-sync/requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
+COPY solution/inventory-sync/app ./app
+
+ENV FL_ENV=poc-ubi \
+    SAP_SYSTEM=S4HANA-FL-NA \
+    POS_REGION=multi \
+    SYNC_API_TOKEN=demo-not-a-real-secret \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+EXPOSE 8080
+USER 1001
+CMD ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

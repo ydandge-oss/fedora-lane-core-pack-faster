@@ -31,23 +31,20 @@ Give Fedora Lane an **approved RHEL golden image** (Image Builder) plus **Insigh
 
 ---
 
-## Quick start
+## Proof of Concept (run this for demos)
 
 ```bash
-# 1. Validate blueprint file (no RHEL builder needed)
-chmod +x solution/scripts/*.sh
-./solution/scripts/validate-blueprint.sh
-./solution/scripts/demo-checklist.sh
-
-# 2. Sample app (laptop or RHEL)
-cd solution/inventory-sync
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-export SYNC_API_TOKEN=demo-not-a-real-secret
-uvicorn app.main:app --host 127.0.0.1 --port 8080
+chmod +x poc/run-poc.sh solution/scripts/*.sh
+./poc/run-poc.sh
+# Opens/writes: poc/output/evidence-report.md
+# API stays on http://127.0.0.1:8080 — stop with: ./poc/run-poc.sh --cleanup
 ```
 
-Image Builder compose steps: [solution/image-builder/README.md](./solution/image-builder/README.md).
+Full PoC guide: [poc/README.md](./poc/README.md)
+
+Optional UBI container mode (needs Podman machine): `./poc/run-poc.sh --container`
+
+Image Builder compose (real RHEL builder): [solution/image-builder/README.md](./solution/image-builder/README.md).
 
 ---
 

@@ -5,7 +5,7 @@
 **Audience:** Alex Lee, Casey Novak (SME personas)  
 **Branch:** `rhel-image-builder-insights`  
 
-> Speak to Alex and Casey by name. Pre-start inventory-sync. Blueprint + runbook on screen.
+> Speak to Alex and Casey by name. Pre-run `./poc/run-poc.sh`. Have `poc/output/evidence-report.md` open.
 
 ---
 
@@ -29,9 +29,9 @@
 
 “Casey, Alex — I chose **image-first** over automation-first. You get a reviewable standard now; we can add Ansible later for ongoing drift.”
 
-### Show blueprint (2:30)
+### Show PoC (3:00)
 
-Open `fl-rhel-baseline.toml` — packages, chrony, Insights client, firewall, podman.
+Show snowflake vs baseline from the PoC output, then `evidence-report.md`, then skim `fl-rhel-baseline.toml` (packages, chrony, Insights, firewall, podman).
 
 ### Show Day-2 (2:00)
 

@@ -1,0 +1,5 @@
+Fedora Lane — RHEL baseline PoC marker
+Blueprint: fl-rhel-baseline
+Source: solution/image-builder/fl-rhel-baseline.toml
+Intent: hosts are born consistent (DC / boutique / cloud)
+PoC runtime: UBI9 stand-in OR local uvicorn (see poc/README.md)

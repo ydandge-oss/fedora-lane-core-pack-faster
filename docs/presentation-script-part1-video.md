@@ -5,7 +5,7 @@
 **Branch:** `rhel-image-builder-insights`  
 **Timebox:** 15 minutes  
 
-> Tip: Have the blueprint open in an editor, Day-2 runbook ready, and inventory-sync running locally (`uvicorn`) before you hit record.
+> Tip: Run `./poc/run-poc.sh` before you hit record. Keep `poc/output/evidence-report.md` and the API on `:8080` ready.
 
 ---
 
@@ -31,16 +31,20 @@
 
 “Day-0 consistency from **Image Builder**. Day-2 from **Insights** and security updates. Sample app from the Core Pack — inventory sync between SAP and PoS — runs on that RHEL baseline.”
 
-### 2. Show blueprint (2:30)
+### 2. Show PoC proof (3:00)
 
-Open `solution/image-builder/fl-rhel-baseline.toml`.
+```bash
+./poc/run-poc.sh          # if not already running
+# show snowflake vs baseline table in the log, then:
+cat poc/output/evidence-report.md
+```
 
 **Tell → show → tell**  
-- **Tell:** “This is the approved birth certificate for a Fedora Lane RHEL host.”  
-- **Show:** packages (chrony, firewalld, insights-client, cockpit, podman), NTP, sshd/firewall ports.  
+- **Tell:** “I’ll prove snowflake vs baseline, then a working app on the baseline.”  
+- **Show:** comparison table + evidence report + blueprint packages.  
 - **Tell:** “Casey gets one standard; boutiques and cloud stop starting as snowflakes.”
 
-Optional: `./solution/scripts/validate-blueprint.sh`
+Also open `solution/image-builder/fl-rhel-baseline.toml` briefly.
 
 ### 3. Image Builder compose story (1:30)
 
