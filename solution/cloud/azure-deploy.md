@@ -1,0 +1,25 @@
+# Deploy gold image on Azure (Blank OPEN)
+
+## Goal
+
+Import the manually built disk as a **VHD / managed image**, create a VM, open **2222** and **35443**, prove checks.
+
+## High-level steps
+
+1. Build & seal gold VM.  
+2. Convert to fixed VHD per Azure requirements:  
+   ```bash
+   qemu-img convert -f qcow2 -O vpc fl-rhel-gold.qcow2 fl-rhel-gold.vhd
+   # ensure fixed-size VHD as required by Azure docs
+   ```  
+3. In RHDP **Azure Blank OPEN**:  
+   - Upload VHD to storage account  
+   - Create image / gallery image  
+   - Create VM from image  
+4. NSG rules: allow **2222** and **35443** from your IP.  
+5. SSH `-p 2222` as `fladmin1`.  
+6. Run `verify-gold-image.sh` and `curl :35443`.  
+7. Reboot and re-verify.  
+8. Delete resources / OPEN env when finished.  
+
+**Never** commit Azure credentials.

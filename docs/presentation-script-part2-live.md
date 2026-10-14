@@ -1,21 +1,20 @@
-# 15-minute speaker script — Part 2 (Live POD)  
-## RHEL Golden Image + Insights · No Ansible
+# 15-minute script — Part 2 (Live POD)  
+## Server/Cloud OS TDP · Junior Consultant
 
-**Presenter:** Yash Dandge, Junior Consultant, Red Hat  
-**Audience:** Alex Lee, Casey Novak (SME personas)  
-**Branch:** `rhel-image-builder-insights`  
+**Audience:** SMEs as Casey Novak / Alex Lee  
+**Demo env:** VM from your gold image on AWS or Azure Blank OPEN  
 
-> Speak to Alex and Casey by name. Pre-run `./poc/run-poc.sh`. Have `poc/output/evidence-report.md` open.
+> Extend RHDP lifetime before the call. Have parking-lot notes ready.
 
 ---
 
 ## Opening (1:30)
 
-“Thanks for the time. We’re here because Fedora Lane’s hybrid Linux estate drifts across Virginia, Frankfurt, boutiques, and cloud — and that hurts modernization and audits.”
+“Thanks for the time. We’re here because Fedora Lane’s Linux estate — roughly **1,600 servers** across DCs, boutiques, AWS, and Azure — is inconsistent, hard to patch, and opaque when admins make out-of-band changes. Containers are also stacking risk onto Casey’s team.
 
-“I’m Yash Dandge, Junior Consultant. For this RHEL TDP pilot I built a **golden image with Image Builder** and an **Insights Day-2 path** — deliberately **without Ansible** so we can deliver consistency first.”
+I’m Yash Dandge, Junior Consultant. I’ve built and deployed a **manual RHEL gold image** for the e-commerce web tier per your Expansion Pack specs.
 
-“Today: live walkthrough, value for your teams, one next step. Deep questions after; I’ll email anything we park within two days.”
+I’ll walk it live on cloud, then summarize value and one next step.”
 
 ---
 
@@ -23,40 +22,39 @@
 
 ### Architecture (45s)
 
-“Git holds the Image Builder blueprint. We compose qcow2 or AMI. Hosts register to Insights. A Boutique Inventory Sync service shows an app on that baseline — SAP untouched.”
+“Kickstart gold image → imported to cloud → VM with SSH 2222, containerized httpd 35443, SELinux enforcing, separate volumes, tight firewall.”
 
 ### Decision (45s)
 
-“Casey, Alex — I chose **image-first** over automation-first. You get a reviewable standard now; we can add Ansible later for ongoing drift.”
+“Alex, Casey — we avoided hosted Image Builder per your pack. Manual Kickstart gives you a reviewable, repeatable factory you control.”
 
-### Show PoC (3:00)
-
-Show snowflake vs baseline from the PoC output, then `evidence-report.md`, then skim `fl-rhel-baseline.toml` (packages, chrony, Insights, firewall, podman).
-
-### Show Day-2 (2:00)
-
-`docs/runbook-rhel-day2.md` — register, Insights, `dnf update --security`.
-
-“That’s how we meet Critical/High within days without SSH snowflake patching.”
-
-### Show app (2:00)
+### Prove consistency (2:30)
 
 ```bash
-curl -s http://127.0.0.1:8080/health | jq .
-curl -s http://127.0.0.1:8080/api/v1/sync/status | jq .
+ssh -p 2222 fladmin1@<CLOUD_IP>
+getenforce
+findmnt /tmp   # show noexec
+cat /etc/fl-gold/MARKER
 ```
 
-### Optional hybrid proof (if AWS + Azure VMs are up) (45s)
-
-“Same cloud-init baseline on an AWS e-commerce-style host and an Azure secondary-region host — curl `/health` on both. That’s Fedora Lane’s multi-cloud story with one standard.”
+### Prove security (2:00)
 
 ```bash
-./poc/run-poc.sh --remote
+grep -R Port /etc/ssh/sshd_config.d
+sudo firewall-cmd --list-ports
+# root SSH / password auth disabled — show config snippets
 ```
 
-### What we didn’t do (30s)
+### Prove containers for ops (2:00)
 
-“No SAP migration, no Ansible dependency, no claim we solved post-day-0 drift forever — that’s Phase 2.”
+```bash
+podman ps
+curl -s http://127.0.0.1:35443/
+```
+
+Browser from your machine to `:35443`.
+
+“Same workload pattern Cameron’s team ships — operable for Linux admins via systemd.”
 
 ---
 
@@ -64,29 +62,26 @@ curl -s http://127.0.0.1:8080/api/v1/sync/status | jq .
 
 | Stakeholder | Value |
 |---|---|
-| Casey | One RHEL standard |
-| Alex | Manageable factory + patch runbook |
-| Ren | Insights from day 0 |
-| Cameron | Predictable OS for services |
-| Anya | Real milestone |
+| Casey | Standard RHEL web image; container as a service |
+| Alex | Proven Day-0 image; cloud-deployed; reboot-safe |
+| Ren | SELinux, noexec tmp, minimal ports, key-only SSH |
+| Cameron | Path to run containerized web frontends consistently |
+| Anya | Real milestone toward fewer vulnerable weeks after CVEs |
 
 ---
 
 ## Closing (1:30)
 
-“Core message: approved RHEL golden image plus Insights is the practical first step for Fedora Lane’s Linux consistency.”
+“Gold image is how we stop the OS lottery on the web fleet.
 
-“**One next step:** 90-minute workshop with you both to freeze v1 blueprint and schedule the first Virginia lab compose.”
+**One next step:** 2-day pilot — bake passwords/keys for your IdP, import AMI into non-prod, patch-drill one CVE against this baseline.
 
-“Follow-up email in two days with repo branch link and parking-lot answers. Questions?”
+I’ll email within two days with the repo, verification results, and parking-lot answers. Questions?”
 
 ---
 
-## Timing
+## Live tips
 
-| Segment | Target |
-|---|---|
-| Opening | 1:30 |
-| Walkthrough | 8:00 |
-| Value | 3:00 |
-| Closing | 1:30 |
+- If RHDP sleeps, have screenshots of verify output as backup — then narrate recovery.  
+- Don’t live-edit sudoers on the call.  
+- Park deep OpenSCAP questions for email unless stretch is ready.  

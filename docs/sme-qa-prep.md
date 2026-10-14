@@ -1,26 +1,22 @@
-# SME Q&A prep — Alex & Casey  
-## RHEL golden image branch (no Ansible)
+# SME Q&A — Casey / Alex (Server/Cloud OS)
 
-### 1. Why not Ansible from day one?
-We can deliver day-0 consistency with Image Builder without automation coding. Ansible is Phase 2 for drift *after* provisioning. Image first is lower risk for a stretched ops team.
+### Why not hosted Image Builder?
+Expansion Pack requires a **manual** gold image. Kickstart gives Fedora Lane a reviewable, offline-capable factory.
 
-### 2. How do boutiques stay consistent if they’re “independently managed”?
-Independence of site ≠ independence of image. They deploy the same approved qcow2/ISO; local network settings differ, baseline doesn’t.
+### Why will this fix the 600 failed patches story?
+One OS major/minor + one agent/tooling baseline on the web tier removes “wrong libraries / missing agent / custom kernels” variance for that fleet segment.
 
-### 3. What about Critical/High CVEs within days?
-Insights shows exposure; `dnf update --security` (or advisory-targeted updates) in a maintenance wave. Rebuild the golden image so *new* hosts include fixes going forward.
+### How does this stop undocumented SSH changes?
+It doesn’t replace process alone — but key-only SSH, no root, passworded sudo, and a known baseline shrink the blast radius. Next: Session Recording + Web Console.
 
-### 4. Does this replace VMware?
-No. RHEL runs **on** VMware (and cloud) as the guest OS standard. Hypervisor stays; OS sprawl shrinks.
+### Why httpd in a container?
+Expansion Pack asked for it if possible, and it lets ops use **systemd** instead of copying fragile `podman run` lines (Challenge 3).
 
-### 5. How does this help SAP / PoS?
-We standardize the Linux under and around those stacks. Inventory sync stays at the edge — we don’t re-platform SAP in this pilot.
+### Why non-standard ports?
+Required by pack; also reduces internet noise on 22/80.
 
-### 6. What if Image Builder isn’t ready in our lab?
-Blueprint in Git is still the source of truth; we can compose on a small builder host or use a stand-in RHEL VM with the same package set for the demo, then produce the real artifact for Virginia lab.
+### Can boutiques use this image?
+Web-tier gold image first; boutique Closet images can fork the same Kickstart with smaller disk profiles later.
 
-### 7. Won’t hosts drift after months anyway?
-Yes — that’s why Phase 2 is config management. This pilot stops the worst problem: **every new host starting different**.
-
-### 8. Why is Insights in the image?
-So Ren gets visibility as soon as a host is born — not after someone remembers to install an agent weeks later.
+### Day-2 patching?
+Rebuild gold image when CVEs land; rolling replace web nodes. Insights optional next phase.

@@ -1,98 +1,87 @@
-# 15-minute speaker script — Part 1 (Recorded video)  
-## RHEL Golden Image + Insights · No Ansible
+# 15-minute script — Part 1 (Video / RHSH recording)  
+## Server/Cloud OS TDP · Junior Consultant · Gold Image
 
-**Presenter:** Yash Dandge, Junior Consultant, Red Hat  
-**Branch:** `rhel-image-builder-insights`  
-**Timebox:** 15 minutes  
+**Presenter:** Yash Dandge  
+**Submit:** RHSH recording + GitHub link + docs — select **Server/Cloud OS TDP**
 
-> Tip: Run `./poc/run-poc.sh` before you hit record. Keep `poc/output/evidence-report.md` and the API on `:8080` ready.
+> Pre-record checklist: cloud VM up; SSH key ready; `curl :35443` works; verify script copied to VM.
 
 ---
 
 ## Opening (1:30)
 
-**Why we’re here**  
-“This is my Part 1 practice for Fedora Lane. They asked Red Hat to help with hybrid complexity: drifted Linux across data centers, boutiques, and cloud, which blocks modernization and makes PCI/GDPR/CCPA evidence hard.”
+“This is my Part 1 for the Fedora Lane Server/Cloud OS Expansion Pack.  
+Fedora Lane runs about **1,600 servers** — 900 on-prem, 600 in AWS/Azure, 100 in boutiques — on Rocky, Ubuntu, CentOS Stream, and Amazon Linux. That inconsistency breaks patching, hides admin changes, and leaves ops struggling with containers.
 
-**Intro**  
-“I’m Yash Dandge, Junior Consultant. My TDP focus is **RHEL**. I’m not using Ansible in this pilot — the solution is a **golden image plus Insights**.”
+I’m Yash Dandge, Junior Consultant. I built a **manual RHEL gold image** for their e-commerce web fleet — Kickstart-based, not hosted Image Builder — and deployed it to the cloud.
 
-**Confirm the problem**  
-“Virginia and Frankfurt on VMware, boutique closets, AWS and Azure Linux — without one standard OS build, Casey can’t enforce baselines, Alex’s team fires tickets, and Ren can’t see posture cleanly.”
-
-**Objective + agenda**  
-“I’ll show the Image Builder blueprint, the Day-2 patch story, and a sample Boutique Inventory Sync API on that RHEL pattern. Walkthrough, value, one next step.”
+Today: walk through the image live, then map value to their three challenges.”
 
 ---
 
 ## Live walkthrough (8:00)
 
-### 1. Approach (1:00)
+### 1. Challenges → approach (1:00)
 
-“Day-0 consistency from **Image Builder**. Day-2 from **Insights** and security updates. Sample app from the Core Pack — inventory sync between SAP and PoS — runs on that RHEL baseline.”
+“One RHEL gold image: separate log/home/tmp volumes, SELinux enforcing, SSH 2222, httpd **container** on 35443, firewall locked down, admins in `fladmins` with passworded sudo.”
 
-### 2. Show PoC proof (3:00)
+### 2. Show repo / Kickstart (1:30)
 
-```bash
-./poc/run-poc.sh          # if not already running
-# show snowflake vs baseline table in the log, then:
-cat poc/output/evidence-report.md
-```
+Open GitHub `expansion-tdp-solution` → `solution/kickstart/fl-rhel-gold.ks`.
 
-**Tell → show → tell**  
-- **Tell:** “I’ll prove snowflake vs baseline, then a working app on the baseline.”  
-- **Show:** comparison table + evidence report + blueprint packages.  
-- **Tell:** “Casey gets one standard; boutiques and cloud stop starting as snowflakes.”
+“Partitions under 5 GiB each for `/var/log`, `/home`, `/tmp`, `/var/tmp` with **noexec** on tmp paths. Security settings match the Expansion Pack checklist.”
 
-Also open `solution/image-builder/fl-rhel-baseline.toml` briefly.
-
-### 3. Image Builder compose story (1:30)
-
-Walk `solution/image-builder/README.md` commands (or run compose if you have a builder).
-
-“Output can be qcow2 for VMware labs or AMI for AWS — same blueprint, hybrid-ready.”
-
-### 4. Day-2 / Insights (1:30)
-
-Open `docs/runbook-rhel-day2.md`.
-
-“Register with subscription-manager, `insights-client --register`, then `dnf update --security` for Critical/High within days — Core Pack policy. No Ansible required for this path.”
-
-### 5. Sample app (1:30)
+### 3. SSH into cloud VM (2:00)
 
 ```bash
-curl -s http://127.0.0.1:8080/health | jq .
-curl -s http://127.0.0.1:8080/api/v1/sync/status | jq .
+ssh -i ~/.ssh/fl-gold-admin -p 2222 fladmin1@<CLOUD_IP>
+getenforce
+findmnt /var/log /home /tmp /var/tmp
+ss -ltn | grep -E '2222|35443'
 ```
 
-“Boutique Inventory Sync pattern — SAP stays; we prove a modern service on standard RHEL.”
+**Tell → show → tell:** hardened, consistent host — not a boutique snowflake.
+
+### 4. Containerized httpd (2:00)
+
+```bash
+podman ps
+systemctl status fl-httpd --no-pager || true
+curl -s http://127.0.0.1:35443/ | head
+```
+
+From laptop browser: `http://<CLOUD_IP>:35443/`
+
+“Ops manage this with systemd — not a fragile multi-line podman command from a developer.”
+
+### 5. Verify script / reboot story (1:30)
+
+```bash
+sudo bash verify-gold-image.sh
+# mention: survived reboot in PoC; services enabled at boot
+```
 
 ---
 
 ## Value summary (3:00)
 
-| Stakeholder | Value |
+| Challenge | Value shown |
 |---|---|
-| **Casey** | Enforceable RHEL standard via image |
-| **Alex** | Predictable builds; clear patch runbook |
-| **Ren** | Insights on every new host; faster audit evidence |
-| **Cameron** | Known OS under services |
-| **Anya** | Small, real milestone — not a platform science project |
+| Inconsistency / failed patches | One RHEL standard for web tier |
+| Untraceable changes | Key-only SSH, no root, sudo always prompts |
+| Container gap | httpd as systemd-managed container |
 
-**Future:** “When we’re ready, Ansible or system roles can fight drift *after* day 0. Image first keeps the door open.”
+“Future: Session Recording and Web Console for deeper audit; OpenSCAP CIS stretch; second cloud image.”
 
 ---
 
 ## Closing (1:30)
 
-**Core message**  
-“Fedora Lane’s Linux estate needs one RHEL golden image and Insights-backed lifecycle — consistency without waiting on automation coding.”
+“Core message: Fedora Lane’s web fleet needs a **manual RHEL gold image** that is secure, partitioned, and container-ready — proven on cloud.
 
-**One next step**  
-“Workshop with Casey to freeze the v1 blueprint package set and build the first qcow2 for Virginia lab.”
+**One next step:** pilot this AMI/image on non-prod e-commerce web nodes with Casey and Alex.
 
-**Close**  
-“That’s Part 1 — feedback welcome. Thank you.”
+Repo and docs are in the submission form. Thank you.”
 
 ---
 

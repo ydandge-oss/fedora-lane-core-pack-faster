@@ -1,91 +1,68 @@
-# Solution Overview — RHEL Golden Image + Insights for Fedora Lane  
-## Junior Consultant · Core Pack · RHEL TDP (no Ansible)
+# Solution Overview — RHEL Gold Image for Fedora Lane  
+## Server/Cloud OS Expansion Pack · Junior Consultant
 
 ## 1. Purpose
 
-Establish a **production-shaped RHEL standard** for Fedora Lane’s hybrid Linux estate: one approved **golden image** built with **Image Builder**, registered to **Red Hat Insights**, with a clear Day-2 patch path for Critical/High CVEs. Prove the platform with a small **Boutique Inventory Sync** service running on that RHEL baseline.
+Design and demonstrate a **secure, standardized, operationally resilient RHEL gold image** that becomes the foundation for Fedora Lane’s **e-commerce web server fleet**. The image is built **manually** (Kickstart / local VM — not hosted Image Builder), deployed to **AWS or Azure**, and proven to survive reboot with all Expansion Pack controls in place.
 
-This branch intentionally **does not use Ansible**. Day-0 consistency comes from the image; Day-2 comes from Insights + `dnf` security updates. Ansible can be a later phase once the team is ready.
+## 2. Challenges addressed (Expansion Pack)
 
-## 2. Customer challenges addressed
+| Challenge | Pain today | How the gold image helps |
+|---|---|---|
+| **1. Inconsistent server environment** | ~1,600 servers; Rocky/Ubuntu/CentOS Stream/Amazon Linux; patch fails on 600+ hosts | One **RHEL** birth certificate for web tier; same packages, partitions, SELinux, ports everywhere |
+| **2. Untraceable changes / long outages** | Undocumented SSH tweaks; high MTTR | Hardened SSH (key-only, non-standard port, no root); sudo always authenticated; consistent baseline reduces “mystery drift.” Pair with Session Recording / Web Console in ops phase |
+| **3. Container skills gap** | Complex `podman run` typos; ops depend on developers | **httpd runs as a container** managed by **systemd/Quadlet** — start/stop/status like any service, not a fragile one-liner |
 
-| Core Pack challenge | How this RHEL solution addresses it |
-|---|---|
-| Siloed hybrid/multi-cloud ops | Same RHEL image pattern for NA DC, EMEA DC, boutiques, cloud Linux |
-| Configuration drift (day 0) | Golden image — hosts are born the same |
-| Automation friction | Fewer unique manual builds; Image Builder is the factory |
-| Unpredictable envs block modernization | Known OS + packages under app services |
-| Portability pain | Same baseline on-prem (qcow2) and cloud (AMI path) |
-| COTS constraints | OS standardization under/around SAP & PoS — no SAP rip-and-replace |
-| Security posture / audit | Insights client in image; vulnerability & compliance visibility |
-| CVE “within days” | Insights + `dnf` security update runbook |
-
-## 3. High-level architecture
+## 3. Architecture
 
 ```
-Image Builder blueprint (Git)
+Kickstart (manual) → Gold disk image
         │
         ▼
-  Compose → qcow2 / AMI / installer
+   Import AMI (AWS)  or  VHD image (Azure)
         │
-        ├─ Virginia DC VM (RHEL)
-        ├─ Frankfurt DC VM (RHEL)
-        ├─ Boutique closet VM (RHEL)
-        └─ Cloud Linux (RHEL)
-                │
-                ├─ subscription-manager + insights-client
-                └─ Podman → Boutique Inventory Sync (:8080)
+        ▼
+   Cloud VM from gold image
+        ├─ SSH :2222 (keys, no root, no passwords)
+        ├─ Podman httpd container :35443
+        ├─ SELinux enforcing
+        ├─ /var/log /home /tmp(noexec) /var/tmp separate LVs
+        └─ firewalld: only 2222 + 35443
 ```
 
-## 4. Key design decisions
+## 4. Design decisions
 
-### Golden image first (not Ansible first)
-
-**Why:** You can deliver consistency for Casey without writing automation code yet. Alex gets a reviewable artifact (blueprint in Git). Ren gets Insights on every new host.
-
-### Image Builder over hand-built VMs
-
-**Why:** Repeatable, versioned blueprint; supports multiple output types for Fedora Lane’s hybrid footprint.
-
-### Insights for Day-2 visibility
-
-**Why:** Core Pack demands fast Critical/High patching and better audit evidence. Insights is the RHEL-native answer without a custom CMDB project.
-
-### Sample app = Inventory Sync (from Core Pack)
-
-**Why:** Named custom tool (SAP ↔ PoS). Shows Cameron a portable service on the standard OS without touching SAP internals.
-
-## 5. What we implemented
-
-1. Image Builder blueprint — `solution/image-builder/fl-rhel-baseline.toml`  
-2. Optional Kickstart — `solution/kickstart/fl-rhel-baseline.ks`  
-3. Day-2 runbook — `docs/runbook-rhel-day2.md`  
-4. Demo scripts — `solution/scripts/`  
-5. Inventory Sync API — `solution/inventory-sync/`  
-6. Presentation pack — Part 1 video + Part 2 live scripts  
-
-## 6. Challenge → Solution → Demo mapping
-
-| Challenge | Artifact | Demo moment |
-|---|---|---|
-| Drift at provision | Blueprint TOML | Walk packages/services/NTP |
-| Hybrid outputs | Image Builder docs | qcow2 vs AMI mention |
-| CVE / audit | Day-2 runbook + Insights | `insights-client` / updateinfo story |
-| Modernization | Inventory-sync on RHEL/Podman | `curl /health` |
-| No Ansible yet | This whole branch | Explicit “image now, Ansible later” |
-
-## 7. Risks & mitigations
-
-| Risk | Mitigation |
+| Decision | Why |
 |---|---|
-| No builder host in lab | Narrate blueprint + use stand-in RHEL VM; compose before live call |
-| Config drift **after** day 0 | Call out Ansible/system roles as Phase 2 |
-| Secrets in Kickstart | Placeholders only; activation keys via vault |
-| Scope into PCI CHD | Pilot non-CHD boutiques/apps first with Ren |
+| Manual Kickstart | Expansion Pack forbids hosted Image Builder |
+| httpd **in container** | Meets “if possible” ask + addresses Challenge 3 with systemd-managed Podman |
+| Ports 2222 / 35443 | Spec + reduces noisy scanning on defaults |
+| Separate small volumes | Protect root from log/tmp fill-up |
+| fladmins + passworded sudo | Least privilege + accountability |
+| AWS **or** Azure first | Meets must-have; second cloud is stretch |
 
-## 8. Recommended next phase
+## 5. Challenge → demo mapping
 
-1. Workshop with Casey: freeze RHEL version + package set for v1 image.  
-2. First real compose → Virginia lab cluster.  
-3. Insights dashboard review with Ren.  
-4. Later: add Ansible Automation / system roles for ongoing drift — when you are ready.
+| Challenge | Demo moment |
+|---|---|
+| Inconsistency | Show identical marker + mounts + ports on cloud VM from gold image |
+| Outage / change risk | Show SSH hardening + sudo rules; explain reduced snowflake surface |
+| Containers | `podman ps` + `systemctl status fl-httpd` + curl :35443 |
+
+## 6. Fleet context (Expansion Pack numbers)
+
+| Location | Approx. count |
+|---|---:|
+| On-prem VMs | 900 |
+| AWS + Azure | 600 |
+| Boutiques | 100 |
+| **Total** | **~1,600** |
+
+This gold image is the **web-tier standard** to stop OS diversity and failed mass patching.
+
+## 7. Next phase recommendations
+
+1. Roll gold image to non-prod web fleet; measure patch success rate.  
+2. Enable **Session Recording** + Web Console for Challenge 2 visibility.  
+3. Pipeline rebuilds when CVEs land (still manual-compose friendly).  
+4. Stretch: CIS via OpenSCAP; dual AWS+Azure images.  

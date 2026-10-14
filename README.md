@@ -1,65 +1,89 @@
-# Fedora Lane — Junior Consultant Deliverables  
-## FASTER Core Pack (CY26/27) · **Branch: RHEL Image Builder + Insights**
+# Fedora Lane — Server/Cloud OS TDP  
+## Junior Consultant · Expansion Pack Solution
 
-**Role:** Junior Consultant  
+**Program:** FASTER CY26/27  
+**TDP:** Server / Cloud OS  
 **Customer:** Fedora Lane (fictional)  
-**TDP focus on this branch:** **Red Hat Enterprise Linux** (no Ansible required)  
-**Git hosting:** GitHub — https://github.com/ydandge-oss/fedora-lane-core-pack-faster  
+**Branch:** `expansion-tdp-solution`  
+**GitHub:** https://github.com/ydandge-oss/fedora-lane-core-pack-faster  
 
-> Fictional FASTER practice content. For internal learning only.  
-> Branch `main` keeps the earlier Ansible-oriented pilot. **This branch** is the RHEL golden-image path.
-
----
-
-## Junior Consultant deliverables (Core Pack)
-
-| # | Deliverable | Location |
-|---|---|---|
-| 1 | Technical solution | `solution/` — Image Builder blueprint, Kickstart, inventory-sync on RHEL |
-| 2 | Solution overview | [docs/solution-overview.md](./docs/solution-overview.md) |
-| 3 | 15-min Part 1 (video) | [docs/presentation-script-part1-video.md](./docs/presentation-script-part1-video.md) |
-| 4 | 15-min Part 2 (live) | [docs/presentation-script-part2-live.md](./docs/presentation-script-part2-live.md) |
-| 5 | Follow-up email | [docs/follow-up-email.md](./docs/follow-up-email.md) |
-
-Supporting: [docs/runbook-rhel-day2.md](./docs/runbook-rhel-day2.md) · [docs/sme-qa-prep.md](./docs/sme-qa-prep.md)
+> Private repo preferred for submission. Add **`mflaim-eng`** for viewing access.  
+> Never commit AWS/Azure/RHDP credentials, passwords, or private keys.
 
 ---
 
-## Solution in one sentence
+## What this branch delivers (Expansion Pack)
 
-Give Fedora Lane an **approved RHEL golden image** (Image Builder) plus **Insights-backed Day-2 patching** so DC, boutique, and cloud Linux hosts start consistent and stay patchable — without Ansible.
+A **manually built RHEL gold image** for Fedora Lane’s e-commerce web server fleet that addresses:
+
+1. **Inconsistent server environment** (~1,600 servers; mixed OS)  
+2. **Untraceable admin changes / extended outages**  
+3. **Ops skills gap for container workloads**  
+
+| Deliverable | Location |
+|---|---|
+| Technical solution (gold image assets) | [`solution/`](./solution/) |
+| PoC steps (build → cloud → verify) | [`docs/poc-steps.md`](./docs/poc-steps.md) |
+| Solution overview | [`docs/solution-overview.md`](./docs/solution-overview.md) |
+| Part 1 video script (15 min) | [`docs/presentation-script-part1-video.md`](./docs/presentation-script-part1-video.md) |
+| Part 2 live script (15 min) | [`docs/presentation-script-part2-live.md`](./docs/presentation-script-part2-live.md) |
+| Slides outline | [`docs/presentation-slides.md`](./docs/presentation-slides.md) |
+| Follow-up email | [`docs/follow-up-email.md`](./docs/follow-up-email.md) |
+| Verification checklist | [`docs/verification-checklist.md`](./docs/verification-checklist.md) |
 
 ---
 
-## Proof of Concept (run this for demos)
+## Gold image specs (Expansion Pack checklist)
+
+- [x] **Manual** gold image (no hosted Image Builder service) — Kickstart + documented virt build  
+- [x] Deployable on **AWS or Azure**  
+- [x] **httpd** + dummy `index.html` — **in a container** (Podman)  
+- [x] Separate partitions (&lt; 5 GiB each): `/var/log`, `/home`, `/tmp`, `/var/tmp`  
+- [x] SELinux **enforcing**  
+- [x] `/tmp` **noexec**  
+- [x] httpd on **35443** (SELinux port)  
+- [x] SSH on **2222** (SELinux port)  
+- [x] Admin users + group + sudo  
+- [x] sudo **always** prompts for password  
+- [x] Root SSH disabled  
+- [x] SSH password auth disabled  
+- [x] Firewall: only SSH + httpd ports  
+- [x] Survive reboot; services enable at boot  
+- [ ] Stretch: OpenSCAP CIS — see `solution/openscap/`  
+- [ ] Stretch: AWS **and** Azure images — see cloud docs  
+
+---
+
+## Quick start
+
+1. Read [`docs/poc-steps.md`](./docs/poc-steps.md) end-to-end.  
+2. Build the image on a RHEL builder host using Kickstart (`solution/kickstart/`).  
+3. Upload/import to **AWS Blank OPEN** or **Azure Blank OPEN** (RHDP).  
+4. Provision a VM from the gold image; run [`solution/scripts/verify-gold-image.sh`](./solution/scripts/verify-gold-image.sh).  
+5. Rehearse Part 1 / Part 2 scripts with a timer.  
 
 ```bash
-chmod +x poc/run-poc.sh poc/cloud/scripts/*.sh solution/scripts/*.sh
-./poc/run-poc.sh                 # laptop demo
-# ./poc/run-poc.sh --container   # UBI via Podman
-# ./poc/run-poc.sh --remote      # after ./poc/cloud/aws/launch-ec2.sh
+git checkout expansion-tdp-solution
+# On a RHEL builder (not this laptop alone):
+# see docs/poc-steps.md Phase A–D
 ```
 
-| Mode | Replicates |
-|---|---|
-| `--local` | Working app + baseline story on laptop |
-| `--container` | RHEL-like UBI runtime |
-| `--remote` | **Amazon EC2** via AWS CLI (no Terraform) ± optional Azure |
+---
 
-AWS EC2: [poc/cloud/aws/README.md](./poc/cloud/aws/README.md)  
-Guides: [poc/README.md](./poc/README.md) · [poc/cloud/README.md](./poc/cloud/README.md)  
-Image Builder factory: [solution/image-builder/README.md](./solution/image-builder/README.md)
+## Important Expansion Pack rules
+
+| Do | Don’t |
+|---|---|
+| Create gold image **manually** (Kickstart / local compose) | Use **hosted** Image Builder (console.redhat.com service) |
+| Use RHDP **AWS/Azure Blank OPEN** | Commit cloud/RHDP credentials |
+| Shut down OPEN envs when done | Leave instances running after demo |
 
 ---
 
 ## Branch map
 
-| Branch | Story |
+| Branch | Purpose |
 |---|---|
-| `main` | Ansible inventory + baseline pilot (optional later) |
-| `rhel-image-builder-insights` (**this**) | RHEL golden image + Insights + app on RHEL — **no Ansible** |
-
-```bash
-git fetch origin
-git checkout rhel-image-builder-insights
-```
+| `main` | Early Core Pack Ansible pilot |
+| `rhel-image-builder-insights` | Practice Image Builder path (superseded for graded TDP) |
+| **`expansion-tdp-solution`** | **Official Expansion Pack gold-image solution** |

@@ -1,13 +1,14 @@
-# Slide outline — RHEL Golden Image + Insights (no Ansible)
+# Slide outline — Server/Cloud OS Gold Image (15 min)
 
-1. **Title** — Fedora Lane · RHEL Golden Image Pilot · Yash Dandge  
-2. **Why we’re here** — Hybrid Linux drift → ops + audit + modernization pain  
-3. **Agenda** — Blueprint · Day-2/Insights · App demo · Next step  
-4. **Challenges** — Drift · CVE speed · Audit · Unpredictable envs  
-5. **Solution** — Image Builder golden image + Insights (+ app on RHEL)  
-6. **Architecture** — Blueprint → qcow2/AMI → sites → Insights → Podman app  
-7. **Demo** — live terminal / blueprint  
-8. **Value** — Casey · Alex · Ren · Cameron · Anya  
-9. **Phase 2** — Ansible later (optional)  
-10. **Next step** — Freeze v1 blueprint workshop  
-11. **Thanks / Questions** — branch `rhel-image-builder-insights`  
+1. Title — Fedora Lane RHEL Gold Image · Yash Dandge · Junior Consultant  
+2. Why we’re here — 1,600 servers · mixed OS · failed patches · opaque changes · container gap  
+3. Agenda — Build · Live prove · Value · Next step  
+4. Three challenges (Expansion Pack)  
+5. Solution — Manual RHEL gold image for e-commerce web fleet  
+6. Spec snapshot — partitions · SELinux · 2222 · 35443 · container httpd · firewall  
+7. Architecture diagram  
+8. Demo — live cloud VM  
+9. Value by stakeholder  
+10. Stretch / roadmap — OpenSCAP · dual cloud · Session Recording  
+11. One next step — non-prod pilot  
+12. Thank you / questions — GitHub `expansion-tdp-solution`  

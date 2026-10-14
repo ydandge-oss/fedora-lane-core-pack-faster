@@ -1,62 +1,30 @@
-# Technical solution — RHEL Golden Image + Insights Pilot  
-## No Ansible required
+# Technical solution — Fedora Lane RHEL Gold Image
 
-Practice build for Fedora Lane when the TDP option is **RHEL** and automation coding (Ansible) is out of scope for now.
+Manual gold image for the **Server/Cloud OS** Expansion Pack (Junior Consultant).
 
-## Components
+## Layout
 
 | Path | Purpose |
 |---|---|
-| [image-builder/](./image-builder/) | Image Builder blueprint (TOML) for an approved RHEL golden image |
-| [kickstart/](./kickstart/) | Optional Kickstart snippet aligned to the same baseline |
-| [scripts/](./scripts/) | Helper scripts: validate blueprint locally, demo checklist |
-| [inventory-sync/](./inventory-sync/) | Sample Boutique Inventory Sync API to run **on** the RHEL host |
-| [docs pointers](../docs/runbook-rhel-day2.md) | Day-2: register, patch, Insights |
+| [`kickstart/fl-rhel-gold.ks`](./kickstart/fl-rhel-gold.ks) | Full Kickstart implementing partitions + security baseline |
+| [`container/`](./container/) | Podman httpd (port **35443**) + `index.html` |
+| [`scripts/`](./scripts/) | Post-build helpers + verification |
+| [`systemd/`](./systemd/) | Units so container starts at boot |
+| [`openscap/`](./openscap/) | Stretch goal notes |
+| [`cloud/`](./cloud/) | AWS / Azure import + VM prove steps |
 
-## What “good” looks like in the demo
+## Build principle
 
-1. Show the **blueprint** → explain what is baked into every new host.  
-2. Show (or narrate) **Image Builder** compose → qcow2/AMI/ISO artifact.  
-3. Boot a lab RHEL VM from that image (or a stand-in RHEL VM with the same packages).  
-4. Show **subscription-manager** + **Insights** registration story.  
-5. Run **inventory-sync** on that host and curl `/health`.  
-6. Map each step to Core Pack challenges (drift, CVE patching, audit, modernization).
+1. **Kickstart** installs RHEL with required disks, packages, and firstboot hooks.  
+2. **%post** applies SSH/httpd/firewall/SELinux/sudo/users.  
+3. **Podman** runs httpd from local Containerfile (or UBI httpd).  
+4. Export disk → **AMI** (AWS) or **VHD** (Azure) → provision VM → verify.
 
-## Proof of Concept
+Detailed steps: [`../docs/poc-steps.md`](../docs/poc-steps.md).
 
-From the repo root:
+## Admin accounts (change passwords before production)
 
-```bash
-./poc/run-poc.sh
-```
+Kickstart creates group `fladmins` and users `fladmin1`, `fladmin2`.  
+Passwords are **placeholders** — set real ones offline; never commit live secrets.
 
-See [poc/README.md](../poc/README.md) for local vs UBI/Podman modes and the evidence pack.
-
-## Quick start — sample app only (works on laptop or RHEL)
-
-```bash
-cd inventory-sync
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-export SYNC_API_TOKEN=demo-not-a-real-secret
-uvicorn app.main:app --host 127.0.0.1 --port 8080
-# other terminal:
-curl -s http://127.0.0.1:8080/health
-```
-
-## Image Builder (on a RHEL builder host)
-
-```bash
-# On RHEL with osbuild-composer / cockpit-image-builder installed
-sudo composer-cli blueprints push image-builder/fl-rhel-baseline.toml
-sudo composer-cli blueprints list
-sudo composer-cli compose start fl-rhel-baseline qcow2
-# Wait, then download the image — see image-builder/README.md
-```
-
-If you do not have a builder host yet, walk through the blueprint file and Day-2 runbook in the presentation; still meet the “what/why” bar, and lab the compose before the live call if possible.
-
-## Secrets
-
-- Never commit activation keys, pull secrets, or Insights auth tokens.  
-- Use placeholders in Kickstart / cloud-init examples.  
+Default practice password pattern (change immediately): see Kickstart comments.
