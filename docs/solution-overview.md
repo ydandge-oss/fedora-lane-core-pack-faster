@@ -1,4 +1,4 @@
-# Solution Overview — Dual RHEL Gold Image Factories  
+# Solution Overview — RHEL Image Builder Gold Image  
 ## Server/Cloud OS Expansion Pack · Junior Consultant
 
 ## 1. Purpose
@@ -9,12 +9,15 @@ Give Fedora Lane a **secure, standardized RHEL gold image** for the e-commerce w
 2. Untraceable changes / long outages  
 3. Ops skills gap for containers  
 
-We deliver **two manual factories** (neither uses hosted Image Builder):
+**Primary factory:** local **RHEL Image Builder** on a RHEL VM (blueprint → compose), following Red Hat’s [composing a customized RHEL system image](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/composing_a_customized_rhel_system_image/image-builder-description) procedure.
+
+**Not** hosted Image Builder at console.redhat.com.
 
 | Path | Factory | Role |
 |---|---|---|
-| **A** | Kickstart | Fast, checklist-native gold image |
-| **B** | RHEL 10 Image Mode (bootc) | Same controls; better path to operate at fleet scale |
+| **Primary** | Local RHEL Image Builder | Official Expansion Pack compose path (`ami` / `vhd`) |
+| Alt A | Kickstart | Classic Anaconda recipe (fallback) |
+| Alt B | RHEL 10 Image Mode (bootc) | Container-native OS updates at fleet scale |
 
 ## 2. Architecture
 
@@ -23,15 +26,12 @@ We deliver **two manual factories** (neither uses hosted Image Builder):
                  (partitions, SELinux, 2222, 35443,
                   fladmins, firewall, httpd container)
                            │
-           ┌───────────────┴───────────────┐
-           ▼                               ▼
-   Path A Kickstart                 Path B Image Mode
-   fl-rhel-gold.ks                  Containerfile (rhel-bootc)
-           │                               │
-           ▼                               ▼
-    libvirt / qemu-img              local bootc-image-builder
-           │                               │
-           └───────────────┬───────────────┘
+                           ▼
+              Local RHEL Image Builder VM
+              fl-rhel-gold.toml (blueprint)
+                           │
+              image-builder build ami|vhd|qcow2
+                           │
                            ▼
               AWS or Azure Blank OPEN VM
                            │
@@ -41,25 +41,25 @@ We deliver **two manual factories** (neither uses hosted Image Builder):
 
 ## 3. Challenge mapping
 
-| Challenge | Both paths | Extra Image Mode value |
-|---|---|---|
-| Inconsistency | One RHEL web baseline | Registry-based OS updates toward 1,600 hosts |
-| Untraceable changes | Hardened SSH + sudo | Immutable-root posture reduces snowflake edits |
-| Container skills gap | httpd via Podman + systemd | OS itself is container-native (ops skill bridge) |
+| Challenge | Image Builder response |
+|---|---|
+| Inconsistency | One blueprint → repeatable `ami`/`vhd` for the web tier |
+| Untraceable changes | Hardened SSH/sudo baked in; versioned blueprint in Git |
+| Container skills gap | httpd via Podman + systemd on firstboot |
 
 ## 4. What we implemented
 
-**Path A:** `solution/kickstart/fl-rhel-gold.ks` + harden/verify scripts + httpd container  
-**Path B:** `solution/image-mode/` bootc Containerfile + `bib-config.toml` + build scripts  
-**Shared:** cloud deploy docs, presentations, verification checklist  
+**Primary:** `solution/image-builder/` — blueprint, firstboot, install/compose scripts  
+**Alts:** Kickstart + Image Mode (same Expansion Pack controls)  
+**Shared:** cloud deploy docs, presentations, `verify-gold-image.sh`
 
 ## 5. Recommended customer journey
 
-1. Pilot web tier with **Kickstart** gold image (Path A) on non-prod.  
-2. Adopt **Image Mode** (Path B) for broader fleet consistency and Day-2 updates.  
+1. Pilot web tier with **Image Builder** gold image on non-prod (AWS or Azure).  
+2. Keep Kickstart / Image Mode as alternate factories if the org prefers those workflows.  
 3. Stretch: OpenSCAP CIS; dual AWS+Azure images.  
 
 ## 6. Demo plan
 
-Live-prove **one** path on cloud; show the other path’s source and scale message.  
+Live-prove **Image Builder** on cloud; show blueprint + compose in Git.  
 Scripts: `docs/presentation-script-part1-video.md` / `part2-live.md`.

@@ -1,23 +1,23 @@
-# Technical solutions — dual gold-image factories
+# Technical solutions — Expansion Pack gold image
 
 | Path | Directory | Summary |
 |---|---|---|
-| **A — Kickstart** | [`kickstart/`](./kickstart/) | Classic Anaconda recipe → VM disk → cloud |
-| **B — Image Mode** | [`image-mode/`](./image-mode/) | RHEL 10 `bootc` Containerfile → local BIB → cloud |
+| **Primary — Image Builder** | [`image-builder/`](./image-builder/) | Local RHEL `image-builder` CLI: blueprint → `ami`/`vhd`/`qcow2` |
+| Alt A — Kickstart | [`kickstart/`](./kickstart/) | Classic Anaconda recipe → VM disk → cloud |
+| Alt B — Image Mode | [`image-mode/`](./image-mode/) | RHEL 10 `bootc` Containerfile → local BIB → cloud |
 
 ## Shared components
 
 | Path | Used by |
 |---|---|
-| [`container/`](./container/) | Kickstart path httpd assets (Image Mode has its own `image-mode/html`) |
+| [`container/`](./container/) | Kickstart path httpd assets |
 | [`systemd/`](./systemd/) | Kickstart Quadlet unit |
-| [`scripts/verify-gold-image.sh`](./scripts/verify-gold-image.sh) | **Both** paths after cloud deploy |
+| [`scripts/verify-gold-image.sh`](./scripts/verify-gold-image.sh) | **All** paths after cloud deploy |
 | [`scripts/apply-runtime-hardening.sh`](./scripts/apply-runtime-hardening.sh) | Kickstart alternative (no KS) |
 | [`cloud/`](./cloud/) | AWS / Azure OPEN import steps |
 | [`openscap/`](./openscap/) | Stretch CIS |
 
 ## Which path for the live demo?
 
-- **Safest checklist:** Path A Kickstart end-to-end on one cloud.  
-- **Best scale narrative:** Path B Image Mode build + same verify script.  
-- **Ideal:** Prove A or B fully; show the other in Git for 60–90 seconds.
+- **Required / primary:** Image Builder end-to-end on one cloud (matches Expansion Pack + Red Hat docs).  
+- Kickstart / Image Mode: backup story or scale narrative if asked.

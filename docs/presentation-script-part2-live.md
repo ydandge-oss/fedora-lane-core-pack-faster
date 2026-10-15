@@ -1,5 +1,5 @@
 # 15-minute script — Part 2 (Live)  
-## Dual path: Kickstart + Image Mode
+## Primary: RHEL Image Builder
 
 **Audience:** Casey Novak / Alex Lee  
 
@@ -9,7 +9,7 @@
 
 “Thanks for the time. Your Expansion Pack asks for a manual RHEL gold image for the e-commerce web fleet — not hosted Image Builder.
 
-We built **two** factories: **Kickstart** for a classic, checklist-solid image, and **RHEL 10 Image Mode** for the path to run that standard toward **1,600 servers**. I’ll prove one live on cloud.”
+We used **local RHEL Image Builder**: a TOML blueprint on a builder VM, composed to **AMI** or **VHD**, then proved on RHDP cloud. I’ll walk the blueprint and show the live checks.”
 
 ---
 
@@ -17,30 +17,31 @@ We built **two** factories: **Kickstart** for a classic, checklist-solid image, 
 
 ### Decision (45s)
 
-“Alex, Casey — Kickstart gets you a trusted AMI/VHD quickly. Image Mode uses bootc so Day-2 looks like container operations, which also helps the container skills gap.”
+“Alex, Casey — Image Builder is Red Hat’s supported compose path for cloud images. One blueprint, repeatable `ami`/`vhd`, Expansion Pack controls baked in.”
 
 ### Live primary (5:30)
 
-Cloud VM: SSH 2222, mounts, SELinux, firewall, httpd container 35443, verify script, reboot story.
+Cloud VM: SSH 2222, mounts, SELinux, firewall, httpd container 35443, verify script, reboot story.  
+Optional: show `image-builder list` / compose command from the builder VM recording.
 
-### Show other path (1:45)
+### If asked about alternates (1:45)
 
-Git walk of the non-primary factory. Same Expansion Pack controls.
+Kickstart and Image Mode (bootc) are in the same repo as alternate factories — same checklist.
 
 ---
 
 ## Value (3:00)
 
 Casey — standard + container via systemd  
-Alex — two deployable factories, cloud-proven  
+Alex — deployable AMI/VHD from one blueprint  
 Ren — SELinux, noexec tmp, minimal ports  
 Cameron — predictable web baseline  
-Anya — milestone now; scale path with Image Mode  
+Anya — milestone now; scale by re-composing the blueprint  
 
 ---
 
 ## Closing (1:30)
 
-“**One next step:** pick Path A or B for non-prod web pilot this month; keep the other as the strategic factory.
+“**One next step:** pilot the Image Builder gold image on non-prod web this month.
 
 Follow-up email in two days with repo and parking-lot answers. Questions?”

@@ -12,7 +12,7 @@ Thank you for the time on [date] discussing the Server/Cloud OS Expansion Pack s
 
 ## Overview
 
-We demonstrated a **manually built RHEL gold image** for Fedora Lane’s e-commerce web fleet (and documented a second factory using **RHEL 10 Image Mode / bootc**), addressing:
+We demonstrated a **manually built RHEL gold image** using **local RHEL Image Builder** (blueprint → compose `ami`/`vhd` on a builder VM — not hosted console.redhat.com), addressing:
 
 1. Inconsistent server environment (~1,600 hosts / mixed OS)  
 2. Untraceable administrative changes and extended outages  
@@ -24,11 +24,13 @@ Key controls shown: separate `/var/log`, `/home`, `/tmp` (noexec), `/var/tmp`; S
 
 https://github.com/ydandge-oss/fedora-lane-core-pack-faster/tree/expansion-tdp-solution  
 
+Primary path: `solution/image-builder/` · PoC: `docs/poc-steps-image-builder.md`  
+
 (Please ensure `mflaim-eng` has access if using the private fork.)
 
 ## Next steps
 
-1. Pilot gold image AMI/VHD on non-prod web nodes.  
+1. Pilot Image Builder AMI/VHD on non-prod web nodes.  
 2. Align admin keys / IdP with Ren’s access standards.  
 3. Optional: OpenSCAP CIS hardening pass; second cloud image.  
 4. Pair with Web Console / Session Recording for change visibility.

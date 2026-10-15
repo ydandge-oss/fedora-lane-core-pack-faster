@@ -1,15 +1,16 @@
-# PoC steps — dual gold-image paths
+# PoC steps — Expansion Pack gold image
 
-This Expansion Pack solution offers **two** manual factories (no hosted Image Builder):
+**Primary path** uses local **RHEL Image Builder** (official compose procedure). Alternates remain available.
 
 | Path | What it is | Detailed steps |
 |---|---|---|
-| **A — Kickstart** | Classic RHEL install recipe → disk → cloud | [poc-steps-kickstart.md](./poc-steps-kickstart.md) |
-| **B — Image Mode** | RHEL 10 bootc Containerfile → local BIB → cloud | [poc-steps-image-mode.md](./poc-steps-image-mode.md) |
+| **Primary — Image Builder** | Blueprint TOML → local `image-builder` compose → `ami`/`vhd` | [poc-steps-image-builder.md](./poc-steps-image-builder.md) |
+| Alt A — Kickstart | Classic RHEL install recipe → disk → cloud | [poc-steps-kickstart.md](./poc-steps-kickstart.md) |
+| Alt B — Image Mode | RHEL 10 bootc Containerfile → local BIB → cloud | [poc-steps-image-mode.md](./poc-steps-image-mode.md) |
 
-Compare: [kickstart-vs-image-mode.md](./kickstart-vs-image-mode.md)
+Upstream Image Builder: [image-builder-description](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/composing_a_customized_rhel_system_image/image-builder-description)
 
-## Shared end state (both paths)
+## Shared end state (all paths)
 
 On the cloud VM you must show:
 
@@ -22,16 +23,16 @@ On the cloud VM you must show:
 - `fladmins` + passworded sudo  
 - Survives **reboot**  
 
-Verifier (both paths):
+Verifier:
 
 ```bash
 sudo bash solution/scripts/verify-gold-image.sh
 ```
 
-## Suggested PoC plan for your group
+## Suggested PoC plan
 
-1. **Primary demo:** complete Path A **or** Path B end-to-end on AWS *or* Azure OPEN.  
-2. **Secondary story:** walk the other path’s source in Git (2 minutes).  
+1. **Primary demo:** Image Builder compose → AWS *or* Azure OPEN → verify + reboot.  
+2. **If asked:** 60-second Git walk of Kickstart or Image Mode.  
 3. Stretch: OpenSCAP + second cloud (`solution/openscap/`, cloud docs).  
 
 ## RHDP reminder

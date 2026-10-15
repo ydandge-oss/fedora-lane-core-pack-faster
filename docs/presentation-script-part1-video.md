@@ -1,55 +1,44 @@
-# 15-minute script — Part 1 (Video)  
-## Dual path: Kickstart + Image Mode
+# 5–7 minute script — Part 1 (Video)  
+## Primary: RHEL Image Builder gold image
 
-**Presenter:** Yash Dandge  
-**Submit:** Server/Cloud OS TDP + GitHub `expansion-tdp-solution`
-
-> Pre-record: one cloud VM fully working (Path A **or** B). Have the other path open in the IDE.
+**Audience:** Casey Novak / Alex Lee (and SME reviewers)  
+**Topic:** Server/Cloud OS TDP — Expansion Pack
 
 ---
 
-## Opening (1:30)
+## Hook (0:30)
 
-“Fedora Lane has about **1,600 servers** on mixed Linux — patches fail, changes aren’t traceable, and containers stress ops.
-
-I’m Yash Dandge. We designed **two manual gold-image factories** — **Kickstart** and **RHEL 10 Image Mode** — neither uses hosted Image Builder. I’ll prove one live on cloud and show how both meet the Expansion Pack.”
+“Fedora Lane’s e-commerce web fleet is inconsistent across ~1,600 servers. Expansion Pack asks for a **manual** RHEL gold image — not hosted Image Builder. We built that with **local RHEL Image Builder** on a builder VM.”
 
 ---
 
-## Walkthrough (8:00)
+## Problem → Want (1:00)
 
-### 1. Dual-path diagram (1:00)
-
-Show `docs/kickstart-vs-image-mode.md` or architecture from solution overview.
-
-“Kickstart = install recipe. Image Mode = bootable OS container converted locally to a disk.”
-
-### 2. Live prove primary path (5:00)
-
-SSH `:2222` → `verify-gold-image.sh` → `curl :35443` → `podman ps` → mounts / SELinux.
-
-### 3. Secondary path in Git (2:00)
-
-If primary was Kickstart, open `solution/image-mode/Containerfile` + `build-bootc.sh`.  
-If primary was Image Mode, open `solution/kickstart/fl-rhel-gold.ks`.
-
-“Same ports, users, httpd container, firewall — different factory. Image Mode is how we’d scale Day-2 across the fleet.”
+- Mixed OS / snowflake hosts → one RHEL web baseline  
+- Untraceable changes → blueprint in Git + hardened SSH/sudo  
+- Container skills gap → httpd runs in a container on the gold image  
 
 ---
 
-## Value (3:00)
+## Solution (2:30)
 
-| Challenge | Message |
-|---|---|
-| Inconsistency | One RHEL web gold image |
-| Change / MTTR | Hardened SSH + sudo |
-| Containers | httpd as systemd service |
-| Scale | Image Mode for ~1,600-host future |
+Show Git: `solution/image-builder/fl-rhel-gold.toml`
+
+1. **Blueprint** — packages, LVM mounts (`/var/log`, `/home`, `/tmp`, `/var/tmp`), `fladmins`, firewall 2222/35443, SSH drop-in  
+2. **Compose** — `image-builder build ami` or `vhd` on a subscribed RHEL 10 VM  
+3. **Firstboot** — SELinux ports, `/tmp` noexec, Podman httpd on **35443**  
+4. **Prove** — cloud VM + `verify-gold-image.sh` + reboot  
+
+Cite Red Hat: composing a customized RHEL system image / image-builder CLI.
 
 ---
 
-## Closing (1:30)
+## Demo evidence (1:30)
 
-“Pilot with Kickstart or Image Mode on OPEN cloud; standardize the web tier; grow Image Mode for fleet updates.
+Screen: SSH `-p 2222`, `getenforce`, `findmnt`, `curl :35443`, firewall list, verify script output.
 
-Repo: `expansion-tdp-solution`. Thank you.”
+---
+
+## Close (0:30)
+
+“Next step: pilot this Image Builder AMI/VHD on non-prod web. Repo link and live demo in Part 2.”
