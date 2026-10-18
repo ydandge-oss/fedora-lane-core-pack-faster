@@ -54,3 +54,10 @@ provider.tf
 
 # AWS EC2 local env (contains account-specific settings)
 poc/cloud/aws/env.local
+solution/cloud/aws/env.local
+solution/cloud/aws/output/
+solution/cloud/azure/env.local
+solution/cloud/azure/output/
+
+# Local tool installs
+.tools/

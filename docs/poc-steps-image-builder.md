@@ -2,6 +2,8 @@
 
 Follow the Red Hat procedure for composing a customized RHEL system image with **local** Image Builder on a RHEL VM.
 
+**AWS end-to-end runbook (proven):** [aws-gold-ami-poc-runbook.md](./aws-gold-ami-poc-runbook.md)
+
 Upstream: [RHEL image builder description](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/composing_a_customized_rhel_system_image/image-builder-description)
 
 **Not** hosted Image Builder at console.redhat.com.
@@ -87,8 +89,11 @@ Compose can take a long time. Keep the builder VM running until the artifact app
 
 | Target | Guide |
 |---|---|
+| AWS (fast PoC scripts) | [`solution/cloud/aws/README.md`](../solution/cloud/aws/README.md) |
 | AWS | [`solution/cloud/aws-deploy.md`](../solution/cloud/aws-deploy.md) |
 | Azure | [`solution/cloud/azure-deploy.md`](../solution/cloud/azure-deploy.md) |
+
+**AWS without a pre-built AMI:** order RHDP **AWS Blank OPEN**, fill `solution/cloud/aws/env.local`, run `./launch-ec2.sh` then `./verify-remote.sh`.
 
 Security group / NSG: inbound **TCP 2222** and **TCP 35443** from your IP only.
 

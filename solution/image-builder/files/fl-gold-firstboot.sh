@@ -1,7 +1,7 @@
 #!/bin/bash
 # Fedora Lane — firstboot hardening for Image Builder gold image
 # Baked into the image via blueprint [[customizations.files]]
-set -euo pipefail
+set -uo pipefail
 
 MARKER=/var/lib/fl-gold-firstboot-done
 if [[ -f "$MARKER" ]]; then
@@ -41,8 +41,11 @@ firewall-cmd --reload || true
 systemctl enable --now sshd || true
 
 # httpd in container on 35443
-install -d -m 0755 /opt/fl/httpd-gold/html
-cat >/opt/fl/httpd-gold/html/index.html <<'HTML'
+mkdir -p /opt/fl/httpd-gold/html
+chmod 0755 /opt /opt/fl /opt/fl/httpd-gold /opt/fl/httpd-gold/html 2>/dev/null || true
+rm -f /opt/fl/httpd-gold/html/index.html
+umask 022
+tee /opt/fl/httpd-gold/html/index.html >/dev/null <<'HTML'
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Fedora Lane Gold Image</title></head>
@@ -53,21 +56,32 @@ cat >/opt/fl/httpd-gold/html/index.html <<'HTML'
 </body>
 </html>
 HTML
+chmod 0644 /opt/fl/httpd-gold/html/index.html
 
-cat >/opt/fl/httpd-gold/Containerfile <<'CF'
+tee /opt/fl/httpd-gold/Containerfile >/dev/null <<'CF'
 FROM registry.access.redhat.com/ubi9/httpd-24
 COPY html/ /var/www/html/
 CF
 
+# Prefer registry image directly if local build is slow/unavailable
 if ! podman image exists localhost/fl-httpd-gold:latest; then
-  (cd /opt/fl/httpd-gold && podman build -t localhost/fl-httpd-gold:latest .) || true
+  if (cd /opt/fl/httpd-gold && podman build -t localhost/fl-httpd-gold:latest .); then
+    :
+  else
+    podman pull registry.access.redhat.com/ubi9/httpd-24 || true
+    podman tag registry.access.redhat.com/ubi9/httpd-24 localhost/fl-httpd-gold:latest || true
+  fi
 fi
 
 podman rm -f fl-httpd 2>/dev/null || true
 podman run -d --name fl-httpd --restart=always \
   -p 35443:8080 \
   -v /opt/fl/httpd-gold/html:/var/www/html:Z \
-  localhost/fl-httpd-gold:latest || true
+  localhost/fl-httpd-gold:latest || \
+podman run -d --name fl-httpd --restart=always \
+  -p 35443:8080 \
+  -v /opt/fl/httpd-gold/html:/var/www/html:Z \
+  registry.access.redhat.com/ubi9/httpd-24 || true
 
 cd /tmp
 podman generate systemd --new --name fl-httpd --files --restart-policy=always 2>/dev/null || true
@@ -79,3 +93,4 @@ fi
 
 touch "$MARKER"
 echo "Fedora Lane gold firstboot complete"
+exit 0

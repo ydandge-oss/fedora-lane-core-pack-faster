@@ -12,7 +12,7 @@ description = "Fedora Lane e-commerce web gold image — Expansion Pack (RHEL Im
 version = "0.1.0"
 modules = []
 groups = []
-distro = "rhel-10"
+distro = "rhel-10.1"
 
 [customizations]
 hostname = "fl-rhel-gold"
@@ -75,7 +75,7 @@ name = "fladmins"
 name = "fladmin1"
 description = "Fedora Lane administrator 1"
 groups = ["fladmins", "wheel"]
-key = "ssh-ed25519 AAAAREPLACE_WITH_REAL_PUBLIC_KEY fladmin1@fedorlane-gold"
+key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDXQJrl1hHebreb+4XQppIvxg9wnZ75IsTvoi+UAssUBVsvTupV9PCmVx2bLhQxHgPfeBqndtc0DXNEnTNapDxBtxlHfiTa526qzCuNtNf5hAJCs2ZOjgpy6zpiY9JKgggHQqJkapGoAB0jZ5T1SeCLupAA9XTfz7UvcE2TgHvFOHTvVhE8Y9tZ9Sq6/Ksu3rZ4rforWBDO5TJ98Ft9zmyYKq3xwumRXr4m6DzrYr3/semkA1P88SNPa6Unt47mHr7a9HRF4RMtSJnVmlv7kAEvmKdAb4a8++8P4oDVDOQaEZA980tbuZmIpoaZBBVbttlWVCNzwWHPRyKY3I1H9cAn4keD8pzE6VfRMhphKUkM0WMSsPW4JaAP87ZpFije6skfo6q2KCHPWvTu/m5FpEFwuhA0Fs+7dNIcmP2YTA3GD/GMCkeSwehaA0vIzx7T/j9wgAj6LHD9iQ0Z1Oqbsd1Er/5yhulPI0nYI+2JYr496okbqOnOFYbKFOa4Wvkpad+SsPNB/R1Z76AD5UXV/XUIQleb0zpFMffhVuBQC09VAk8re/p+7QVy3DES9bk8xiA6PY+afDIHSpBsJQoDDoQBwQ9UDXnjhg4f1XSAt0TO+neDmMjypFZiCC2g9v0v7LeJY+lMoEF2FySPUGPbu7zrBmFkLApT4DKN7WuZP2XXYw== ydandge@redhat.com"
 # Optional password hash for sudo demos (openssl passwd -6 'YourPassword'):
 # password = "$6$rounds=5000$salt$hash"
 
@@ -83,7 +83,7 @@ key = "ssh-ed25519 AAAAREPLACE_WITH_REAL_PUBLIC_KEY fladmin1@fedorlane-gold"
 name = "fladmin2"
 description = "Fedora Lane administrator 2"
 groups = ["fladmins", "wheel"]
-key = "ssh-ed25519 AAAAREPLACE_WITH_REAL_PUBLIC_KEY fladmin2@fedorlane-gold"
+key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDXQJrl1hHebreb+4XQppIvxg9wnZ75IsTvoi+UAssUBVsvTupV9PCmVx2bLhQxHgPfeBqndtc0DXNEnTNapDxBtxlHfiTa526qzCuNtNf5hAJCs2ZOjgpy6zpiY9JKgggHQqJkapGoAB0jZ5T1SeCLupAA9XTfz7UvcE2TgHvFOHTvVhE8Y9tZ9Sq6/Ksu3rZ4rforWBDO5TJ98Ft9zmyYKq3xwumRXr4m6DzrYr3/semkA1P88SNPa6Unt47mHr7a9HRF4RMtSJnVmlv7kAEvmKdAb4a8++8P4oDVDOQaEZA980tbuZmIpoaZBBVbttlWVCNzwWHPRyKY3I1H9cAn4keD8pzE6VfRMhphKUkM0WMSsPW4JaAP87ZpFije6skfo6q2KCHPWvTu/m5FpEFwuhA0Fs+7dNIcmP2YTA3GD/GMCkeSwehaA0vIzx7T/j9wgAj6LHD9iQ0Z1Oqbsd1Er/5yhulPI0nYI+2JYr496okbqOnOFYbKFOa4Wvkpad+SsPNB/R1Z76AD5UXV/XUIQleb0zpFMffhVuBQC09VAk8re/p+7QVy3DES9bk8xiA6PY+afDIHSpBsJQoDDoQBwQ9UDXnjhg4f1XSAt0TO+neDmMjypFZiCC2g9v0v7LeJY+lMoEF2FySPUGPbu7zrBmFkLApT4DKN7WuZP2XXYw== ydandge@redhat.com"
 
 [customizations.firewall]
 ports = ["2222:tcp", "35443:tcp"]
@@ -94,13 +94,8 @@ disabled = ["ssh"]
 [customizations.services]
 enabled = ["sshd", "firewalld", "chronyd", "fl-gold-firstboot.service"]
 
-[[customizations.directories]]
-path = "/etc/ssh/sshd_config.d"
-mode = "0755"
-
-[[customizations.directories]]
-path = "/etc/sudoers.d"
-mode = "0750"
+# Do NOT mkdir paths that already exist on RHEL (sshd_config.d, sudoers.d,
+# systemd/system) — osbuild mkdir fails with FileExistsError.
 
 [[customizations.directories]]
 path = "/etc/fl-gold"
@@ -108,10 +103,6 @@ mode = "0755"
 
 [[customizations.directories]]
 path = "/etc/fl-gold/bin"
-mode = "0755"
-
-[[customizations.directories]]
-path = "/etc/systemd/system"
 mode = "0755"
 
 [[customizations.files]]

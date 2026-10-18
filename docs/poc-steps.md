@@ -5,6 +5,8 @@
 | Path | What it is | Detailed steps |
 |---|---|---|
 | **Primary — Image Builder** | Blueprint TOML → local `image-builder` compose → `ami`/`vhd` | [poc-steps-image-builder.md](./poc-steps-image-builder.md) |
+| **AWS gold AMI runbook (proven)** | Builder EC2 → compose → register AMI → launch → verify → reboot | [aws-gold-ami-poc-runbook.md](./aws-gold-ami-poc-runbook.md) |
+| **Azure gold VHD runbook** | Builder EC2 → compose VHD → S3 → Azure image → VM → verify | [azure-gold-vhd-poc-runbook.md](./azure-gold-vhd-poc-runbook.md) |
 | Alt A — Kickstart | Classic RHEL install recipe → disk → cloud | [poc-steps-kickstart.md](./poc-steps-kickstart.md) |
 | Alt B — Image Mode | RHEL 10 bootc Containerfile → local BIB → cloud | [poc-steps-image-mode.md](./poc-steps-image-mode.md) |
 
@@ -31,9 +33,10 @@ sudo bash solution/scripts/verify-gold-image.sh
 
 ## Suggested PoC plan
 
-1. **Primary demo:** Image Builder compose → AWS *or* Azure OPEN → verify + reboot.  
-2. **If asked:** 60-second Git walk of Kickstart or Image Mode.  
-3. Stretch: OpenSCAP + second cloud (`solution/openscap/`, cloud docs).  
+1. **Primary demo (proven):** Follow [aws-gold-ami-poc-runbook.md](./aws-gold-ami-poc-runbook.md) — Image Builder → gold AMI → verify + reboot.  
+2. **AWS fast path (no AMI):** RHDP Blank OPEN + `launch-ec2.sh` → `verify-remote.sh` (cloud-init only; partitions not baked).  
+3. **If asked:** 60-second Git walk of Kickstart or Image Mode.  
+4. **Azure VHD:** [azure-gold-vhd-poc-runbook.md](./azure-gold-vhd-poc-runbook.md). Stretch: OpenSCAP.  
 
 ## RHDP reminder
 

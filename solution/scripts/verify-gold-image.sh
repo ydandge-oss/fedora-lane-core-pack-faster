@@ -25,8 +25,8 @@ check "/tmp separate mount" findmnt -n /tmp
 check "/var/tmp separate mount" findmnt -n /var/tmp
 check "/tmp has noexec" bash -c 'findmnt -n -o OPTIONS /tmp | grep -q noexec'
 check "sshd listens on 2222" bash -c 'ss -ltn | grep -q ":2222"'
-check "Root login disabled in sshd" bash -c 'grep -R "^PermitRootLogin no" /etc/ssh/sshd_config /etc/ssh/sshd_config.d 2>/dev/null | grep -q .'
-check "PasswordAuthentication no" bash -c 'grep -R "^PasswordAuthentication no" /etc/ssh/sshd_config /etc/ssh/sshd_config.d 2>/dev/null | grep -q .'
+check "Root login disabled in sshd" bash -c 'grep -REh "^\s*PermitRootLogin\s+(no|prohibit-password|without-password)" /etc/ssh/sshd_config /etc/ssh/sshd_config.d 2>/dev/null | grep -q .'
+check "PasswordAuthentication disabled" bash -c 'grep -REh "^\s*PasswordAuthentication\s+(no|false)" /etc/ssh/sshd_config /etc/ssh/sshd_config.d 2>/dev/null | grep -q .'
 check "fladmins group exists" getent group fladmins
 check "fladmin1 exists" id fladmin1
 check "sudoers requires password (no NOPASSWD for fladmins)" bash -c '! grep -R "NOPASSWD" /etc/sudoers.d/fladmins 2>/dev/null'

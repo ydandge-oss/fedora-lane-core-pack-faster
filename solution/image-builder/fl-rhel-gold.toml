@@ -12,7 +12,7 @@ description = "Fedora Lane e-commerce web gold image — Expansion Pack (RHEL Im
 version = "0.1.0"
 modules = []
 groups = []
-distro = "rhel-10"
+distro = "rhel-10.1"
 
 [customizations]
 hostname = "fl-rhel-gold"
@@ -75,7 +75,7 @@ name = "fladmins"
 name = "fladmin1"
 description = "Fedora Lane administrator 1"
 groups = ["fladmins", "wheel"]
-key = "ssh-ed25519 AAAAREPLACE_WITH_REAL_PUBLIC_KEY fladmin1@fedorlane-gold"
+key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDXQJrl1hHebreb+4XQppIvxg9wnZ75IsTvoi+UAssUBVsvTupV9PCmVx2bLhQxHgPfeBqndtc0DXNEnTNapDxBtxlHfiTa526qzCuNtNf5hAJCs2ZOjgpy6zpiY9JKgggHQqJkapGoAB0jZ5T1SeCLupAA9XTfz7UvcE2TgHvFOHTvVhE8Y9tZ9Sq6/Ksu3rZ4rforWBDO5TJ98Ft9zmyYKq3xwumRXr4m6DzrYr3/semkA1P88SNPa6Unt47mHr7a9HRF4RMtSJnVmlv7kAEvmKdAb4a8++8P4oDVDOQaEZA980tbuZmIpoaZBBVbttlWVCNzwWHPRyKY3I1H9cAn4keD8pzE6VfRMhphKUkM0WMSsPW4JaAP87ZpFije6skfo6q2KCHPWvTu/m5FpEFwuhA0Fs+7dNIcmP2YTA3GD/GMCkeSwehaA0vIzx7T/j9wgAj6LHD9iQ0Z1Oqbsd1Er/5yhulPI0nYI+2JYr496okbqOnOFYbKFOa4Wvkpad+SsPNB/R1Z76AD5UXV/XUIQleb0zpFMffhVuBQC09VAk8re/p+7QVy3DES9bk8xiA6PY+afDIHSpBsJQoDDoQBwQ9UDXnjhg4f1XSAt0TO+neDmMjypFZiCC2g9v0v7LeJY+lMoEF2FySPUGPbu7zrBmFkLApT4DKN7WuZP2XXYw== ydandge@redhat.com"
 # Optional password hash for sudo demos (openssl passwd -6 'YourPassword'):
 # password = "$6$rounds=5000$salt$hash"
 
@@ -83,7 +83,7 @@ key = "ssh-ed25519 AAAAREPLACE_WITH_REAL_PUBLIC_KEY fladmin1@fedorlane-gold"
 name = "fladmin2"
 description = "Fedora Lane administrator 2"
 groups = ["fladmins", "wheel"]
-key = "ssh-ed25519 AAAAREPLACE_WITH_REAL_PUBLIC_KEY fladmin2@fedorlane-gold"
+key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDXQJrl1hHebreb+4XQppIvxg9wnZ75IsTvoi+UAssUBVsvTupV9PCmVx2bLhQxHgPfeBqndtc0DXNEnTNapDxBtxlHfiTa526qzCuNtNf5hAJCs2ZOjgpy6zpiY9JKgggHQqJkapGoAB0jZ5T1SeCLupAA9XTfz7UvcE2TgHvFOHTvVhE8Y9tZ9Sq6/Ksu3rZ4rforWBDO5TJ98Ft9zmyYKq3xwumRXr4m6DzrYr3/semkA1P88SNPa6Unt47mHr7a9HRF4RMtSJnVmlv7kAEvmKdAb4a8++8P4oDVDOQaEZA980tbuZmIpoaZBBVbttlWVCNzwWHPRyKY3I1H9cAn4keD8pzE6VfRMhphKUkM0WMSsPW4JaAP87ZpFije6skfo6q2KCHPWvTu/m5FpEFwuhA0Fs+7dNIcmP2YTA3GD/GMCkeSwehaA0vIzx7T/j9wgAj6LHD9iQ0Z1Oqbsd1Er/5yhulPI0nYI+2JYr496okbqOnOFYbKFOa4Wvkpad+SsPNB/R1Z76AD5UXV/XUIQleb0zpFMffhVuBQC09VAk8re/p+7QVy3DES9bk8xiA6PY+afDIHSpBsJQoDDoQBwQ9UDXnjhg4f1XSAt0TO+neDmMjypFZiCC2g9v0v7LeJY+lMoEF2FySPUGPbu7zrBmFkLApT4DKN7WuZP2XXYw== ydandge@redhat.com"
 
 [customizations.firewall]
 ports = ["2222:tcp", "35443:tcp"]
@@ -94,13 +94,8 @@ disabled = ["ssh"]
 [customizations.services]
 enabled = ["sshd", "firewalld", "chronyd", "fl-gold-firstboot.service"]
 
-[[customizations.directories]]
-path = "/etc/ssh/sshd_config.d"
-mode = "0755"
-
-[[customizations.directories]]
-path = "/etc/sudoers.d"
-mode = "0750"
+# Do NOT mkdir paths that already exist on RHEL (sshd_config.d, sudoers.d,
+# systemd/system) — osbuild mkdir fails with FileExistsError.
 
 [[customizations.directories]]
 path = "/etc/fl-gold"
@@ -108,10 +103,6 @@ mode = "0755"
 
 [[customizations.directories]]
 path = "/etc/fl-gold/bin"
-mode = "0755"
-
-[[customizations.directories]]
-path = "/etc/systemd/system"
 mode = "0755"
 
 [[customizations.files]]
@@ -172,7 +163,7 @@ mode = "0755"
 data = """#!/bin/bash
 # Fedora Lane — firstboot hardening for Image Builder gold image
 # Baked into the image via blueprint [[customizations.files]]
-set -euo pipefail
+set -uo pipefail
 
 MARKER=/var/lib/fl-gold-firstboot-done
 if [[ -f "$MARKER" ]]; then
@@ -212,8 +203,11 @@ firewall-cmd --reload || true
 systemctl enable --now sshd || true
 
 # httpd in container on 35443
-install -d -m 0755 /opt/fl/httpd-gold/html
-cat >/opt/fl/httpd-gold/html/index.html <<'HTML'
+mkdir -p /opt/fl/httpd-gold/html
+chmod 0755 /opt /opt/fl /opt/fl/httpd-gold /opt/fl/httpd-gold/html 2>/dev/null || true
+rm -f /opt/fl/httpd-gold/html/index.html
+umask 022
+tee /opt/fl/httpd-gold/html/index.html >/dev/null <<'HTML'
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Fedora Lane Gold Image</title></head>
@@ -224,21 +218,32 @@ cat >/opt/fl/httpd-gold/html/index.html <<'HTML'
 </body>
 </html>
 HTML
+chmod 0644 /opt/fl/httpd-gold/html/index.html
 
-cat >/opt/fl/httpd-gold/Containerfile <<'CF'
+tee /opt/fl/httpd-gold/Containerfile >/dev/null <<'CF'
 FROM registry.access.redhat.com/ubi9/httpd-24
 COPY html/ /var/www/html/
 CF
 
+# Prefer registry image directly if local build is slow/unavailable
 if ! podman image exists localhost/fl-httpd-gold:latest; then
-  (cd /opt/fl/httpd-gold && podman build -t localhost/fl-httpd-gold:latest .) || true
+  if (cd /opt/fl/httpd-gold && podman build -t localhost/fl-httpd-gold:latest .); then
+    :
+  else
+    podman pull registry.access.redhat.com/ubi9/httpd-24 || true
+    podman tag registry.access.redhat.com/ubi9/httpd-24 localhost/fl-httpd-gold:latest || true
+  fi
 fi
 
 podman rm -f fl-httpd 2>/dev/null || true
 podman run -d --name fl-httpd --restart=always \
   -p 35443:8080 \
   -v /opt/fl/httpd-gold/html:/var/www/html:Z \
-  localhost/fl-httpd-gold:latest || true
+  localhost/fl-httpd-gold:latest || \
+podman run -d --name fl-httpd --restart=always \
+  -p 35443:8080 \
+  -v /opt/fl/httpd-gold/html:/var/www/html:Z \
+  registry.access.redhat.com/ubi9/httpd-24 || true
 
 cd /tmp
 podman generate systemd --new --name fl-httpd --files --restart-policy=always 2>/dev/null || true
@@ -250,5 +255,6 @@ fi
 
 touch "$MARKER"
 echo "Fedora Lane gold firstboot complete"
+exit 0
 
 """
