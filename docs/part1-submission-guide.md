@@ -20,6 +20,7 @@ Select topic: **Server/Cloud OS TDP**
 | AWS runbook (proven) | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/aws-gold-ami-poc-runbook.md |
 | Verification checklist | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/verification-checklist.md |
 | Presentation script | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/presentation-script-part1-video.md |
+| Demo commands (compose → VM) | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/demo-commands-gold-image.md |
 | Slide outline | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/presentation-slides.md |
 
 If your cohort also requires **Consulting GitLab (FASTER sub-group):** mirror or push the same `expansion-tdp-solution` branch there and submit **that** URL as the source of truth if the form asks for GitLab specifically.

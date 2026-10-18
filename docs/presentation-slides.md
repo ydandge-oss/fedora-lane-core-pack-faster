@@ -7,9 +7,10 @@ Use with [`presentation-script-part1-video.md`](./presentation-script-part1-vide
 3. **Problem** — Inconsistent estate · untraceable change · container skills gap  
 4. **Want** — One secure RHEL web baseline for AWS and Azure  
 5. **Product** — Local RHEL Image Builder (blueprint → compose) — not hosted console  
-6. **Architecture** — Blueprint → `ami` / `vhd` → cloud prove  
-7. **Controls** — Partitions · SELinux · SSH 2222 · httpd:35443 · fladmins · firewall  
-8. **Evidence** — Live VM + verify + reboot (AWS and Azure proven)  
-9. **Value** — Map each challenge → deliverable  
-10. **Next step** — Non-prod pilot; alternates (Kickstart / Image Mode); OpenSCAP stretch  
-11. **Close** — Repo as source of truth · Q&A in Part 2  
+6. **Architecture** — Blueprint → compose commands → `ami`/`vhd` → launch → VM  
+7. **Command path** — `compose-*` → `create-image` / AMI → `launch-*` → `verify-remote`  
+8. **Controls** — Partitions · SELinux · SSH 2222 · httpd:35443 · fladmins · firewall  
+9. **Evidence** — Live gold VM + verify + reboot (AWS and Azure proven)  
+10. **Value** — Map each challenge → deliverable  
+11. **Next step** — Non-prod pilot; alternates (Kickstart / Image Mode); OpenSCAP stretch  
+12. **Close** — Repo as source of truth · Q&A in Part 2  
