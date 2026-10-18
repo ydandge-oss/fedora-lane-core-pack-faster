@@ -224,7 +224,7 @@ Blueprint / compose: `solution/image-builder/`.
 - [x] httpd **container** on **35443**  
 - [x] `fladmins` + admin users  
 - [x] Survives **reboot** (AWS reboot + re-verify)  
-- [ ] Azure **VHD** PoC — follow [azure-gold-vhd-poc-runbook.md](./azure-gold-vhd-poc-runbook.md)  
+- [x] Azure **VHD** PoC — [azure-gold-vhd-poc-runbook.md](./azure-gold-vhd-poc-runbook.md) (proven)  
 
 ---
 

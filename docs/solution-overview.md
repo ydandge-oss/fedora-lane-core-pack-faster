@@ -13,7 +13,7 @@ Give Fedora Lane a **secure, standardized RHEL gold image** for the e-commerce w
 
 **Not** hosted Image Builder at console.redhat.com.
 
-**Proven AWS PoC runbook:** [aws-gold-ami-poc-runbook.md](./aws-gold-ami-poc-runbook.md)
+**Proven PoC runbooks:** [aws-gold-ami-poc-runbook.md](./aws-gold-ami-poc-runbook.md) · [azure-gold-vhd-poc-runbook.md](./azure-gold-vhd-poc-runbook.md)
 
 | Path | Factory | Role |
 |---|---|---|

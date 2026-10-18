@@ -1,5 +1,5 @@
 #!/bin/bash
-# Fedora Lane — firstboot hardening for Image Builder gold image
+# Fedora Lane - firstboot hardening for Image Builder gold image
 # Baked into the image via blueprint [[customizations.files]]
 set -uo pipefail
 
@@ -52,7 +52,7 @@ tee /opt/fl/httpd-gold/html/index.html >/dev/null <<'HTML'
 <body>
   <h1>Fedora Lane e-commerce web baseline</h1>
   <p>httpd is running from a container on the RHEL Image Builder gold image.</p>
-  <p>Port 35443 · SSH 2222 · SELinux enforcing</p>
+  <p>Port 35443 | SSH 2222 | SELinux enforcing</p>
 </body>
 </html>
 HTML

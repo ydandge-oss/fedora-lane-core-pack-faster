@@ -40,9 +40,14 @@ echo "[verify] Copying scripts..."
   "$repo_root/solution/image-builder/files/fl-gold-firstboot.sh" \
   "${ADMIN_USER}@${PUBLIC_IP}:/tmp/"
 
-echo "[verify] Ensuring httpd container (rootless if needed)..."
+echo "[verify] Ensuring httpd on 35443 (skip if already listening)..."
 "${SSH[@]}" "${ADMIN_USER}@${PUBLIC_IP}" 'bash -s' <<'EOS'
 set -euo pipefail
+if ss -ltn | grep -q ':35443'; then
+  echo "[httpd] already listening on 35443 — leaving it alone"
+  curl -sf --max-time 5 http://127.0.0.1:35443/ | head -8 || true
+  exit 0
+fi
 mkdir -p "$HOME/fl-httpd/html"
 cat >"$HOME/fl-httpd/html/index.html" <<'HTML'
 <!DOCTYPE html>
@@ -51,13 +56,13 @@ cat >"$HOME/fl-httpd/html/index.html" <<'HTML'
 <body>
   <h1>Fedora Lane e-commerce web baseline</h1>
   <p>httpd is running from a container on the RHEL Image Builder gold image.</p>
-  <p>Port 35443 · SSH 2222 · SELinux enforcing</p>
+  <p>Port 35443 | SSH 2222 | SELinux enforcing</p>
 </body>
 </html>
 HTML
 
 if sudo -n true 2>/dev/null; then
-  echo "[httpd] sudo -n available — running system firstboot"
+  echo "[httpd] sudo -n available - running system firstboot"
   sudo -n cp /tmp/fl-gold-firstboot.sh /etc/fl-gold/bin/fl-gold-firstboot.sh
   sudo -n chmod 755 /etc/fl-gold/bin/fl-gold-firstboot.sh
   sudo -n rm -f /var/lib/fl-gold-firstboot-done

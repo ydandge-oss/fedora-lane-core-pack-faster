@@ -1,47 +1,33 @@
-# Azure PoC — Expansion Pack gold VHD (RHDP Blank OPEN)
+# Azure — Expansion Pack gold VHD (proven)
 
-Prove the same Image Builder gold image on **Azure** using a **VHD** → managed image → VM.
+RHDP **Azure Blank OPEN** → local Image Builder → **`.vhd`** → managed image → PoC VM.
 
-## Flow
+**Full steps:** [`docs/azure-gold-vhd-poc-runbook.md`](../../../docs/azure-gold-vhd-poc-runbook.md)
 
-```text
-1. Compose VHD (RHEL Image Builder on AWS builder EC2)
-       ./../aws/compose-vhd-on-builder.sh
-       → s3://…/gold/*.vhd
-
-2. Azure Blank OPEN + az login
-       ./upload-vhd.sh → ./create-image.sh → ./launch-vm.sh → ./verify-remote.sh
-```
-
-Full runbook: [`docs/azure-gold-vhd-poc-runbook.md`](../../../docs/azure-gold-vhd-poc-runbook.md)
-
-## Prerequisites
-
-1. Order **Azure Blank OPEN** at [demo.redhat.com](https://demo.redhat.com)  
-2. Install Azure CLI: `brew install azure-cli`  
-3. Gold VHD composed (or still on S3 from step 1)  
-4. Copy env:
+## Quick path
 
 ```bash
 cd solution/cloud/azure
-cp env.example env.local
-# fill AZURE_SUBSCRIPTION_ID (+ tenant / SP if needed)
-```
-
-## Quick commands
-
-```bash
+cp -n env.example env.local   # AZURE_SUBSCRIPTION_ID, AZURE_LOCATION
+az login
 chmod +x *.sh
-./upload-vhd.sh /path/to/gold.vhd   # or omit path to pull from aws/output/gold-vhd.json
+
+./compose-vhd-on-azure-builder.sh
+# if prompted: ssh + sudo rhc connect, then --continue <IP>
+
+# if compose OK but upload missed:
+# ./upload-vhd-from-azure-builder.sh <BUILDER_IP>
+
 ./create-image.sh
 ./launch-vm.sh
-# wait 4–5 minutes
 ./verify-remote.sh
-./cleanup.sh                        # or ./cleanup.sh --group
+az vm restart -g fl-gold-rg -n fl-rhel-gold-poc
+./verify-remote.sh
+./cleanup.sh
 ```
 
 ## Security
 
-- Never commit `env.local`, `.pem`, or OPEN credentials  
-- NSG opens **2222** + **35443** from your IP only  
+- Never commit `env.local` or keys  
+- NSG: builder **22**; PoC **2222** + **35443** from your IP  
 - Delete the RHDP OPEN when finished  

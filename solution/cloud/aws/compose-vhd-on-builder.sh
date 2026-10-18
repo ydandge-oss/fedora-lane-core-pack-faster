@@ -139,14 +139,17 @@ export AWS_CONFIG_FILE=/root/.aws/config
 export AWS_PROFILE=default
 export HOME=/root
 
-# RHSM required for Image Builder depsolve (Marketplace RHUI is not enough)
-if ! subscription-manager status 2>/dev/null | grep -qi 'Overall Status: Current'; then
+# RHSM required for Image Builder depsolve (Marketplace RHUI is not enough).
+# After rhc connect, status is often "Registered" (not always "Current").
+if ! subscription-manager status 2>/dev/null | grep -qiE 'Overall Status: (Current|Registered)'; then
   echo "ERROR: Builder is not RHSM-subscribed."
   echo "  ssh -i ... ${SSH_USER}@${IP}"
   echo "  sudo rhc connect"
   echo "Then re-run: ./compose-vhd-on-builder.sh ${IP}"
+  subscription-manager status 2>/dev/null || true
   exit 2
 fi
+echo "RHSM OK: $(subscription-manager status 2>/dev/null | grep -i 'Overall Status' || echo registered)"
 
 cd '$REMOTE'
 chmod +x scripts/*.sh files/*.sh 2>/dev/null || true
@@ -154,34 +157,33 @@ chmod +x scripts/*.sh files/*.sh 2>/dev/null || true
 ./scripts/generate-blueprint.sh || true
 echo "=== COMPOSE VHD (Azure gold) ==="
 ./scripts/compose.sh vhd
-if ! command -v aws >/dev/null; then
-  dnf install -y awscli || true
+# Prefer official AWS CLI v2 — RHEL awscli2 RPM often breaks on OpenSSL symbol mismatch
+if [[ ! -x /usr/local/bin/aws ]]; then
+  dnf install -y unzip >/dev/null
+  cd /tmp
+  curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+  rm -rf aws
+  unzip -qo awscliv2.zip
+  ./aws/install --update
 fi
+AWS_BIN=/usr/local/bin/aws
+command -v "\$AWS_BIN" >/dev/null || AWS_BIN=\$(command -v aws)
 mkdir -p /tmp/fl-vhd-out
-# Collect VHD / azure artifacts (image-builder names vary by version)
-find /home/ec2-user /var/tmp /tmp /root '$REMOTE' -type f \\( -name '*.vhd' -o -name '*azure*' \\) 2>/dev/null \\
-  | head -40 | while read -r f; do
-  case "\$f" in
-    *.vhd|*.raw) ;;
-    *) continue ;;
-  esac
-  bn=\$(basename "\$f")
-  echo "Uploading \$f -> s3://${AWS_BUCKET}/gold/\$bn"
-  aws s3 cp "\$f" "s3://${AWS_BUCKET}/gold/\$bn"
-  echo "\$bn" >> /tmp/fl-vhd-out/uploaded.txt
-done
 # Prefer largest .vhd as the gold artifact
 BEST=\$(find /home/ec2-user /var/tmp /tmp /root '$REMOTE' -type f -name '*.vhd' 2>/dev/null | xargs -r ls -1S 2>/dev/null | head -1 || true)
 if [[ -z "\$BEST" ]]; then
   BEST=\$(find /home/ec2-user /var/tmp /tmp /root '$REMOTE' -type f -name '*.raw' 2>/dev/null | xargs -r ls -1S 2>/dev/null | head -1 || true)
 fi
-if [[ -n "\$BEST" ]]; then
-  bn=\$(basename "\$BEST")
-  aws s3 cp "\$BEST" "s3://${AWS_BUCKET}/gold/\$bn"
-  echo "\$bn" > /tmp/fl-vhd-out/primary.txt
-  echo "PRIMARY=\$BEST"
+if [[ -z "\$BEST" ]]; then
+  echo "ERROR: No .vhd/.raw found after compose"
+  exit 1
 fi
-aws s3 ls "s3://${AWS_BUCKET}/gold/" || true
+bn=\$(basename "\$BEST")
+echo "Uploading \$BEST -> s3://${AWS_BUCKET}/gold/\$bn"
+"\$AWS_BIN" s3 cp "\$BEST" "s3://${AWS_BUCKET}/gold/\$bn"
+echo "\$bn" > /tmp/fl-vhd-out/primary.txt
+echo "PRIMARY=\$BEST"
+"\$AWS_BIN" s3 ls "s3://${AWS_BUCKET}/gold/" || true
 echo "=== VHD COMPOSE DONE ==="
 EOS
 

@@ -32,7 +32,10 @@ python3 - <<'PY'
 from pathlib import Path
 import os
 pw = os.environ["GOLD_ADMIN_PASSWORD"]
-script = Path(os.environ["FIRSTBOOT_SRC"]).read_text()
+# Azure CLI custom-data path is latin-1 in some versions — keep ASCII only
+script = Path(os.environ["FIRSTBOOT_SRC"]).read_text(encoding="utf-8")
+script = script.replace("\u2014", "-").replace("\u2013", "-").replace("\u00b7", "|")
+script = script.encode("ascii", "replace").decode("ascii")
 lines = "\n".join("    " + (line if line.strip() else "") for line in script.splitlines())
 if not lines.endswith("\n"):
     lines += "\n"
