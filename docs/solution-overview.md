@@ -29,16 +29,19 @@ Give Fedora Lane a **secure, standardized RHEL gold image** for the e-commerce w
                   fladmins, firewall, httpd container)
                            │
                            ▼
-              Local RHEL Image Builder VM
-              fl-rhel-gold.toml (blueprint)
+              Local RHEL Image Builder
+              fl-rhel-gold.toml (blueprint in Git)
                            │
-              image-builder build ami|vhd|qcow2
+              image-builder build ami | vhd
                            │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+         AWS gold AMI              Azure gold VHD
+         launch + verify           managed image + VM
+              │                         │
+              └────────────┬────────────┘
                            ▼
-              AWS or Azure Blank OPEN VM
-                           │
-                           ▼
-                 verify-gold-image.sh
+                 verify-remote.sh (+ reboot)
 ```
 
 ## 3. Challenge mapping
@@ -47,21 +50,28 @@ Give Fedora Lane a **secure, standardized RHEL gold image** for the e-commerce w
 |---|---|
 | Inconsistency | One blueprint → repeatable `ami`/`vhd` for the web tier |
 | Untraceable changes | Hardened SSH/sudo baked in; versioned blueprint in Git |
-| Container skills gap | httpd via Podman + systemd on firstboot |
+| Container skills gap | httpd via Podman on firstboot (port 35443) |
 
 ## 4. What we implemented
 
-**Primary:** `solution/image-builder/` — blueprint, firstboot, install/compose scripts  
-**Alts:** Kickstart + Image Mode (same Expansion Pack controls)  
-**Shared:** cloud deploy docs, presentations, `verify-gold-image.sh`
+| Area | Location |
+|---|---|
+| Blueprint + firstboot + compose | `solution/image-builder/` |
+| AWS PoC automation | `solution/cloud/aws/` |
+| Azure PoC automation | `solution/cloud/azure/` |
+| Alternate factories | `solution/kickstart/`, `solution/image-mode/` |
+| Verification | `solution/scripts/verify-gold-image.sh` + cloud `verify-remote.sh` |
+
+**Proven:** AWS gold AMI and Azure gold VHD both passed Expansion Pack checks including reboot.
 
 ## 5. Recommended customer journey
 
-1. Pilot web tier with **Image Builder** gold image on non-prod (AWS or Azure).  
+1. Pilot Image Builder gold image on non-prod web (AWS **or** Azure — both paths exist).  
 2. Keep Kickstart / Image Mode as alternate factories if the org prefers those workflows.  
-3. Stretch: OpenSCAP CIS; dual AWS+Azure images.  
+3. Stretch: OpenSCAP CIS baseline on the same image.  
 
 ## 6. Demo plan
 
-Live-prove **Image Builder** on cloud; show blueprint + compose in Git.  
-Scripts: `docs/presentation-script-part1-video.md` / `part2-live.md`.
+Live-prove Image Builder on cloud (SSH 2222, mounts, SELinux, curl 35443, verify).  
+Show blueprint in Git.  
+Scripts: [presentation-script-part1-video.md](./presentation-script-part1-video.md) · [presentation-script-part2-live.md](./presentation-script-part2-live.md).  

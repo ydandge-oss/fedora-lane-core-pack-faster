@@ -1,67 +1,121 @@
 # Fedora Lane — Server/Cloud OS TDP  
 ## Junior Consultant · Expansion Pack gold image
 
-**Branch:** `expansion-tdp-solution`  
-**GitHub:** https://github.com/ydandge-oss/fedora-lane-core-pack-faster/tree/expansion-tdp-solution  
+**Branch:** [`expansion-tdp-solution`](https://github.com/ydandge-oss/fedora-lane-core-pack-faster/tree/expansion-tdp-solution)  
+**Repo:** https://github.com/ydandge-oss/fedora-lane-core-pack-faster  
 
-**Primary factory:** local **RHEL Image Builder** (blueprint → compose `ami` / `vhd`) on a RHEL VM — per [Red Hat docs](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/composing_a_customized_rhel_system_image/image-builder-description).
+**What this is:** A **repeatable RHEL gold image** for Fedora Lane’s e-commerce web tier, built with **local RHEL Image Builder** (not hosted console.redhat.com), proven on **AWS (AMI)** and **Azure (VHD)**.
 
-**Not** hosted Image Builder at console.redhat.com.
+Upstream: [Composing a customized RHEL system image](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/composing_a_customized_rhel_system_image/image-builder-description)
 
-| Path | Tech | Location |
-|---|---|---|
-| **Primary** | RHEL Image Builder (local CLI) | [`solution/image-builder/`](./solution/image-builder/) |
-| Alt A | Kickstart | [`solution/kickstart/`](./solution/kickstart/) |
-| Alt B | RHEL 10 Image Mode (bootc) | [`solution/image-mode/`](./solution/image-mode/) |
-
-Shared: verify script, AWS/Azure deploy notes, presentations.
-
-> Private repo preferred. Add **`mflaim-eng`**. Never commit cloud/RHDP secrets.
+> Never commit RHDP / cloud credentials (`env.local`, `.pem`, keys). Prefer a private remotes; add reviewers as required by your cohort.
 
 ---
 
-## Deliverables
+## Customer challenges → this solution
 
-| Item | Path |
+| Fedora Lane challenge | How we address it |
 |---|---|
-| **Image Builder PoC (primary)** | [`docs/poc-steps-image-builder.md`](./docs/poc-steps-image-builder.md) |
-| PoC index | [`docs/poc-steps.md`](./docs/poc-steps.md) |
-| Kickstart PoC (alt) | [`docs/poc-steps-kickstart.md`](./docs/poc-steps-kickstart.md) |
-| Image Mode PoC (alt) | [`docs/poc-steps-image-mode.md`](./docs/poc-steps-image-mode.md) |
-| Solution overview | [`docs/solution-overview.md`](./docs/solution-overview.md) |
-| Part 1 video script | [`docs/presentation-script-part1-video.md`](./docs/presentation-script-part1-video.md) |
-| Part 2 live script | [`docs/presentation-script-part2-live.md`](./docs/presentation-script-part2-live.md) |
-| Verification | [`docs/verification-checklist.md`](./docs/verification-checklist.md) |
-| Follow-up email | [`docs/follow-up-email.md`](./docs/follow-up-email.md) |
+| Inconsistent estate (~1,600 servers) | One blueprint → repeatable `ami` / `vhd` |
+| Untraceable / risky change | Hardened SSH/sudo baked in; blueprint versioned in Git |
+| Container skills gap | httpd runs as a **container** on the gold image (port 35443) |
 
 ---
 
-## Expansion Pack checklist
+## What’s in the repo
 
-- Manual build (local Image Builder — not hosted)  
-- AWS or Azure deployable (`ami` / `vhd`)  
-- httpd + index.html **in a container** on **35443**  
+| Path | Purpose |
+|---|---|
+| [`solution/image-builder/`](./solution/image-builder/) | **Primary factory** — blueprint, firstboot, compose scripts |
+| [`solution/cloud/aws/`](./solution/cloud/aws/) | AWS Blank OPEN — compose AMI, launch, verify |
+| [`solution/cloud/azure/`](./solution/cloud/azure/) | Azure Blank OPEN — compose VHD, image, launch, verify |
+| [`solution/kickstart/`](./solution/kickstart/) | Alternate factory A |
+| [`solution/image-mode/`](./solution/image-mode/) | Alternate factory B (bootc) |
+| [`docs/`](./docs/) | Overview, runbooks, presentation scripts, checklist |
+
+---
+
+## Proven PoC status
+
+| Cloud | Artifact | Runbook | Status |
+|---|---|---|---|
+| **AWS** | Gold **AMI** | [`docs/aws-gold-ami-poc-runbook.md`](./docs/aws-gold-ami-poc-runbook.md) | Proven (verify + reboot) |
+| **Azure** | Gold **VHD** → managed image | [`docs/azure-gold-vhd-poc-runbook.md`](./docs/azure-gold-vhd-poc-runbook.md) | Proven (verify + reboot) |
+
+Shared Expansion Pack controls (both paths):
+
 - Separate `/var/log`, `/home`, `/tmp`, `/var/tmp` (&lt; 5 GiB); `/tmp` **noexec**  
-- SELinux enforcing; SSH **2222**; key-only; no root SSH  
-- `fladmins` + sudo always prompts  
-- Firewall: only SSH + httpd ports  
-- Survive reboot  
+- SELinux **enforcing**  
+- SSH **2222** (key-only, no root)  
+- httpd **container** on **35443**  
+- `fladmins` + firewall limited to those ports  
+- Survives **reboot**  
 
 ---
 
-## Quick start
+## How to run (quick)
+
+### A) Azure gold image (pure Azure — recommended for demo)
+
+Full steps: [`docs/azure-gold-vhd-poc-runbook.md`](./docs/azure-gold-vhd-poc-runbook.md)
 
 ```bash
 git checkout expansion-tdp-solution
+cd solution/cloud/azure
+cp -n env.example env.local   # set AZURE_SUBSCRIPTION_ID from Azure Blank OPEN
+az login && chmod +x *.sh
 
-# On a subscribed RHEL 10 builder VM:
-cd solution/image-builder
-sudo ./scripts/install-image-builder.sh
-./scripts/generate-blueprint.sh
-# edit fl-rhel-gold.toml — set real SSH public keys
-sudo ./scripts/compose.sh ami    # or: vhd | qcow2
+./compose-vhd-on-azure-builder.sh
+# ssh azureuser@<IP> && sudo rhc connect && exit
+# ./compose-vhd-on-azure-builder.sh --continue <IP>
 
-open docs/poc-steps-image-builder.md
+./create-image.sh && ./launch-vm.sh
+./verify-remote.sh
+# optional: az vm restart ... && ./verify-remote.sh
+./cleanup.sh
 ```
 
-**Demo tip:** Prove Image Builder end-to-end on RHDP cloud; mention Kickstart / Image Mode as alternate factories if asked.
+### B) AWS gold AMI
+
+Full steps: [`docs/aws-gold-ami-poc-runbook.md`](./docs/aws-gold-ami-poc-runbook.md)
+
+```bash
+cd solution/cloud/aws
+cp -n env.example env.local   # RHDP AWS Blank OPEN keys
+export PATH="$PWD/../../.tools/aws-cli:$PATH"   # if using vendored CLI
+./compose-on-builder.sh       # or continue / reupload helpers
+./launch-gold-ami.sh && ./verify-remote.sh
+./terminate-ec2.sh
+```
+
+### C) Blueprint only (any subscribed RHEL builder)
+
+```bash
+cd solution/image-builder
+sudo ./scripts/install-image-builder.sh
+./scripts/generate-blueprint.sh   # set real SSH public keys in TOML
+sudo ./scripts/compose.sh ami     # or: vhd
+```
+
+---
+
+## Documentation (client-facing)
+
+| Doc | Path |
+|---|---|
+| Solution overview | [`docs/solution-overview.md`](./docs/solution-overview.md) |
+| PoC index | [`docs/poc-steps.md`](./docs/poc-steps.md) |
+| Verification checklist | [`docs/verification-checklist.md`](./docs/verification-checklist.md) |
+| Part 1 video script (~15 min) | [`docs/presentation-script-part1-video.md`](./docs/presentation-script-part1-video.md) |
+| Part 2 live script | [`docs/presentation-script-part2-live.md`](./docs/presentation-script-part2-live.md) |
+| Slide outline | [`docs/presentation-slides.md`](./docs/presentation-slides.md) |
+| Part 1 submission guide | [`docs/part1-submission-guide.md`](./docs/part1-submission-guide.md) |
+
+---
+
+## Demo tip (Part 1 video / Part 2 live)
+
+1. Open blueprint `solution/image-builder/fl-rhel-gold.toml` in Git.  
+2. Show a running PoC VM (AWS or Azure): SSH `:2222`, `getenforce`, `findmnt`, `curl :35443`.  
+3. Show `./verify-remote.sh` PASS (and mention reboot).  
+4. Close with pilot recommendation + Git as source of truth.  

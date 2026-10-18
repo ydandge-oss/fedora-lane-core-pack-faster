@@ -9,7 +9,7 @@
 
 “Thanks for the time. Your Expansion Pack asks for a manual RHEL gold image for the e-commerce web fleet — not hosted Image Builder.
 
-We used **local RHEL Image Builder**: a TOML blueprint on a builder VM, composed to **AMI** or **VHD**, then proved on RHDP cloud. I’ll walk the blueprint and show the live checks.”
+We used **local RHEL Image Builder**: a TOML blueprint on a builder VM, composed to **AMI** and **VHD**, and proved both on RHDP AWS and Azure (verify + reboot). I’ll walk the blueprint and show the live checks.”
 
 ---
 
