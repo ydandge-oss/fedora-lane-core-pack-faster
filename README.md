@@ -111,7 +111,7 @@ sudo ./scripts/compose.sh ami     # or: vhd
 | Launch gold image (CLI + Console, no scripts) | [`docs/launch-gold-image-cli-and-console.md`](./docs/launch-gold-image-cli-and-console.md) |
 | Where / when / why to run commands | [`docs/where-when-why-commands.md`](./docs/where-when-why-commands.md) |
 | Part 2 live script | [`docs/presentation-script-part2-live.md`](./docs/presentation-script-part2-live.md) |
-| **Customer presentation (Google Doc ready)** | [`docs/customer-presentation-fedora-lane.md`](./docs/customer-presentation-fedora-lane.md) |
+| **Customer slides (Google Slides)** | [`docs/Fedora-Lane-Expansion-Pack-Technical-Solution.pptx`](./docs/Fedora-Lane-Expansion-Pack-Technical-Solution.pptx) · [how to open](./docs/customer-presentation-fedora-lane.md) |
 | Slide outline | [`docs/presentation-slides.md`](./docs/presentation-slides.md) |
 | Part 1 submission guide | [`docs/part1-submission-guide.md`](./docs/part1-submission-guide.md) |
 

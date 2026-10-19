@@ -1,7 +1,8 @@
 # Slide outline — Server/Cloud OS TDP (~15 min)
 
-**Customer-ready narrative (paste into Google Docs):**  
-[`customer-presentation-fedora-lane.md`](./customer-presentation-fedora-lane.md)
+**Customer deck (upload to Google Slides):**  
+[`Fedora-Lane-Expansion-Pack-Technical-Solution.pptx`](./Fedora-Lane-Expansion-Pack-Technical-Solution.pptx)  
+**Instructions:** [`customer-presentation-fedora-lane.md`](./customer-presentation-fedora-lane.md)
 
 **Spoken script:** [`presentation-script-part1-video.md`](./presentation-script-part1-video.md)
 
