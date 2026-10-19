@@ -1,155 +1,316 @@
 # AWS PoC — Expansion Pack gold image (RHDP Blank OPEN)
 
-Prove Fedora Lane Expansion Pack controls on a real **EC2** instance using AWS CLI (no Terraform).
+Prove Fedora Lane Expansion Pack controls on a real **EC2** instance.
+
+Gold VMs use **SSH port 2222** and **httpd port 35443** (not port 22).
+
+---
 
 ## Two paths
 
-| Path | Script | What you get |
-|---|---|---|
-| **Expansion Pack (required for true gold image)** | `./compose-on-builder.sh` → `./launch-gold-ami.sh` | Local Image Builder compose → **gold AMI** → PoC VM from that AMI |
-| Fast PoC (no gold AMI) | `./launch-ec2.sh` | Stock RHEL + cloud-init only |
+| Path | What you get |
+|---|---|
+| **A. Scripts (easiest)** | `./compose-on-builder.sh` → `./launch-gold-ami.sh` → gold AMI → PoC VM |
+| **B. Plain AWS CLI / Console** | Same result, step-by-step commands below |
 
-**Proven runbook:** [`docs/aws-gold-ami-poc-runbook.md`](../../../docs/aws-gold-ami-poc-runbook.md)  
-Short flow: [`docs/poc-gold-image-then-aws.md`](../../../docs/poc-gold-image-then-aws.md)  
+**Full runbook:** [`docs/aws-gold-ami-poc-runbook.md`](../../../docs/aws-gold-ami-poc-runbook.md)  
 **Where / when / why:** [`docs/where-when-why-commands.md`](../../../docs/where-when-why-commands.md)
 
-Fast PoC proves ports/services/security on AWS quickly. Separate `/var/log`,`/home`,`/tmp`,`/var/tmp` require the Image Builder AMI.
+---
 
 ## Prerequisites
 
-1. Order **AWS Blank OPEN** at [demo.redhat.com](https://demo.redhat.com) (associates)  
-2. From the service overview, copy **Access Key ID** + **Secret** + region (often `us-east-2`)  
-3. AWS CLI available — this repo vendors a copy under `.tools/aws-cli/aws` if needed  
+1. Order **AWS Blank OPEN** at [demo.redhat.com](https://demo.redhat.com)  
+2. Copy **Access Key**, **Secret**, and region (usually `us-east-2`)  
+3. Have AWS CLI (repo copy: `.tools/aws-cli/aws`)
 
 ```bash
-# optional: use vendored CLI from repo root
-export PATH="$PWD/.tools/aws-cli:$PATH"   # from repo root
+cd /Users/ydandge/Documents/fedora-lane-core-pack-faster
+export PATH="$PWD/.tools/aws-cli:$PATH"
 aws --version
 ```
+
+---
 
 ## Configure (do not commit secrets)
 
 ```bash
 cd solution/cloud/aws
 cp env.example env.local
-# edit env.local:
-#   AWS_ACCESS_KEY_ID=...
-#   AWS_SECRET_ACCESS_KEY=...
-#   AWS_REGION=us-east-2
-#   SSH_CIDR=x.x.x.x/32   # or leave empty to auto-detect
 ```
 
-## Fast PoC
+Edit `env.local` and set:
+
+```text
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_REGION=us-east-2
+```
+
+Check login works:
 
 ```bash
-chmod +x *.sh
-./launch-ec2.sh
-# wait 3–5 minutes for cloud-init
-./verify-remote.sh
-
-# manual checks
-IP=$(python3 -c "import json;print(json.load(open('output/aws-outputs.json'))['public_ip'])")
-curl -s "http://${IP}:35443/"
-ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@$IP
-
-# stop billing
-./terminate-ec2.sh
+aws sts get-caller-identity
 ```
-
-## Full Image Builder on AWS
-
-```bash
-./setup-vmimport-role.sh          # once per account
-./compose-on-builder.sh           # or continue-compose / reupload if interrupted
-# wait until GOLD_AMI_ID is set / describe-images = available
-./launch-gold-ami.sh
-./verify-remote.sh
-# optional reboot without sudo password:
-# aws ec2 reboot-instances --instance-ids <ID>
-./terminate-ec2.sh
-```
-
-Resume helpers: `continue-compose-on-builder.sh`, `reupload-ami-from-builder.sh`.  
-**Azure VHD only:** `./compose-vhd-on-builder.sh` → then [`../azure/`](../azure/) + [azure runbook](../../../docs/azure-gold-vhd-poc-runbook.md).  
-Pitfalls (RHSM, distro `rhel-10.x`, SG IP, sudo): see the runbook.
 
 ---
 
-## Launch from gold AMI **without** project scripts
+## Path A — Use our scripts (recommended)
 
-Use this when the gold AMI already exists and the customer prefers raw **AWS CLI** or the **EC2 console**.  
-Gold VMs use **SSH 2222** and **httpd 35443** (not port 22).
+### 1) Create gold AMI (once)
 
-Shared reference: [`docs/launch-gold-image-cli-and-console.md`](../../../docs/launch-gold-image-cli-and-console.md)
+```bash
+chmod +x *.sh
+./setup-vmimport-role.sh
+./compose-on-builder.sh
+```
 
-### AWS CLI (resolve AMI id + launch)
+On the builder, subscribe if asked:
+
+```bash
+ssh -i ~/.ssh/fl-gold-poc.pem ec2-user@<BUILDER_IP>
+sudo rhc connect
+exit
+```
+
+If compose was interrupted:
+
+```bash
+./continue-compose-on-builder.sh <BUILDER_IP>
+```
+
+If `.raw` exists but AMI failed:
+
+```bash
+./reupload-ami-from-builder.sh <BUILDER_IP>
+```
+
+Check AMI is ready:
+
+```bash
+aws ec2 describe-images --owners self \
+  --filters Name=name,Values=fl-rhel-gold \
+  --output table
+```
+
+### 2) Launch PoC from gold AMI
+
+```bash
+./launch-gold-ami.sh
+```
+
+Wait 4–5 minutes, then:
+
+```bash
+./verify-remote.sh
+```
+
+### 3) Manual checks
+
+Read the public IP from the output file:
+
+```bash
+cat output/aws-outputs.json
+```
+
+Then (replace the IP):
+
+```bash
+curl -s http://1.2.3.4:35443/
+ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@1.2.3.4
+```
+
+### 4) Optional: deploy dummy boutique app
+
+```bash
+cd ../../demo-app
+./deploy-to-vm.sh 1.2.3.4
+```
+
+### 5) Cleanup
+
+```bash
+cd ../aws
+./terminate-ec2.sh
+```
+
+Also terminate the builder if still running (ID is in `output/builder-outputs.json`).
+
+---
+
+## Path B — Plain AWS CLI (no project launch script)
+
+Use this when the gold AMI **already exists**.  
+Do one small step at a time. Copy each result into the next command.
+
+Set region:
 
 ```bash
 export AWS_REGION=us-east-2
-export AWS_DEFAULT_REGION="$AWS_REGION"
-
-# Gold AMI id (like Azure: az image show …)
-AMI_ID=$(aws ec2 describe-images --owners self \
-  --filters Name=name,Values=fl-rhel-gold Name=state,Values=available \
-  --query 'sort_by(Images,&CreationDate)[-1].ImageId' \
-  --output text)
-echo "AMI_ID=$AMI_ID"
-
-KEY_NAME=fl-gold-poc                    # existing EC2 key pair name
-INSTANCE_TYPE=t3.medium
-
-VPC_ID=$(aws ec2 describe-vpcs --filters Name=isDefault,Values=true \
-  --query 'Vpcs[0].VpcId' --output text)
-SUBNET_ID=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$VPC_ID" \
-  --query 'Subnets[0].SubnetId' --output text)
-
-SG_NAME=fl-gold-sg
-SG_ID=$(aws ec2 describe-security-groups \
-  --filters Name=group-name,Values="$SG_NAME" Name=vpc-id,Values="$VPC_ID" \
-  --query 'SecurityGroups[0].GroupId' --output text)
-if [[ -z "$SG_ID" || "$SG_ID" == "None" ]]; then
-  SG_ID=$(aws ec2 create-security-group \
-    --group-name "$SG_NAME" \
-    --description "Fedora Lane gold SSH 2222 + httpd 35443" \
-    --vpc-id "$VPC_ID" --query GroupId --output text)
-fi
-
-MYIP=$(curl -4 -fsS ifconfig.me)/32
-aws ec2 authorize-security-group-ingress --group-id "$SG_ID" \
-  --protocol tcp --port 2222 --cidr "$MYIP" 2>/dev/null || true
-aws ec2 authorize-security-group-ingress --group-id "$SG_ID" \
-  --protocol tcp --port 35443 --cidr "$MYIP" 2>/dev/null || true
-
-INSTANCE_ID=$(aws ec2 run-instances \
-  --image-id "$AMI_ID" \
-  --instance-type "$INSTANCE_TYPE" \
-  --key-name "$KEY_NAME" \
-  --security-group-ids "$SG_ID" \
-  --subnet-id "$SUBNET_ID" \
-  --associate-public-ip-address \
-  --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":40,"VolumeType":"gp3","DeleteOnTermination":true}}]' \
-  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=fl-rhel-gold-vm}]' \
-  --query 'Instances[0].InstanceId' --output text)
-
-aws ec2 wait instance-running --instance-ids "$INSTANCE_ID"
-PUBLIC_IP=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" \
-  --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
-echo "PUBLIC_IP=$PUBLIC_IP"
-
-# After ~3–5 minutes:
-ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@$PUBLIC_IP
-curl -s "http://${PUBLIC_IP}:35443/"
+export AWS_DEFAULT_REGION=us-east-2
 ```
 
-### AWS Console
+### Step 1 — Find the gold AMI
 
-1. Region **US East (Ohio) `us-east-2`**.  
-2. **EC2** → **AMIs** (Owned by me) → select **fl-rhel-gold** → **Launch instance from AMI**.  
-3. Instance type **`t3.medium`** (preferred; `t2` shows 2/2 status checks, `t3` shows 3/3 — both OK).  
-4. Key pair: any (login as `fladmin1` still uses the key baked into the AMI, e.g. `~/.ssh/fl-gold-poc.pem`).  
-5. Network: public IP enabled; security group with **TCP 2222** + **TCP 35443** from **My IP** (reuse `fl-rhel-gold-poc-sg` if present). Do **not** rely on port 22.  
-6. Storage ≥ 40 GiB.  
-7. **Advanced details → User data** (required for httpd on console launches) — paste:
+```bash
+aws ec2 describe-images --owners self \
+  --filters Name=name,Values=fl-rhel-gold Name=state,Values=available \
+  --output table
+```
+
+Copy the **ImageId** (looks like `ami-07cb8e42f8e34bc14`).
+
+```bash
+AMI_ID=ami-07cb8e42f8e34bc14
+echo $AMI_ID
+```
+
+### Step 2 — Find default VPC
+
+```bash
+aws ec2 describe-vpcs \
+  --filters Name=isDefault,Values=true \
+  --output table
+```
+
+```bash
+VPC_ID=vpc-xxxxxxxx
+echo $VPC_ID
+```
+
+### Step 3 — Find a subnet in that VPC
+
+```bash
+aws ec2 describe-subnets \
+  --filters Name=vpc-id,Values=$VPC_ID \
+  --output table
+```
+
+```bash
+SUBNET_ID=subnet-xxxxxxxx
+echo $SUBNET_ID
+```
+
+### Step 4 — Security group (SSH 2222 + httpd 35443)
+
+List existing:
+
+```bash
+aws ec2 describe-security-groups \
+  --filters Name=group-name,Values=fl-gold-sg Name=vpc-id,Values=$VPC_ID \
+  --output table
+```
+
+If none, create one:
+
+```bash
+aws ec2 create-security-group \
+  --group-name fl-gold-sg \
+  --description "Fedora Lane gold SSH 2222 + httpd 35443" \
+  --vpc-id $VPC_ID \
+  --output table
+```
+
+```bash
+SG_ID=sg-xxxxxxxx
+echo $SG_ID
+```
+
+Allow your IP (replace with your public IP `/32`):
+
+```bash
+MYIP=1.2.3.4/32
+
+aws ec2 authorize-security-group-ingress \
+  --group-id $SG_ID \
+  --protocol tcp \
+  --port 2222 \
+  --cidr $MYIP
+
+aws ec2 authorize-security-group-ingress \
+  --group-id $SG_ID \
+  --protocol tcp \
+  --port 35443 \
+  --cidr $MYIP
+```
+
+(Ignore errors if the rules already exist.)
+
+### Step 5 — Launch the instance
+
+Key pair name in AWS (file on Mac is still `~/.ssh/fl-gold-poc.pem`):
+
+```bash
+KEY_NAME=fl-gold-poc
+```
+
+Launch:
+
+```bash
+aws ec2 run-instances \
+  --image-id $AMI_ID \
+  --instance-type t3.medium \
+  --key-name $KEY_NAME \
+  --security-group-ids $SG_ID \
+  --subnet-id $SUBNET_ID \
+  --associate-public-ip-address \
+  --output table
+```
+
+Copy the **InstanceId**:
+
+```bash
+INSTANCE_ID=i-xxxxxxxx
+```
+
+Wait until running:
+
+```bash
+aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+```
+
+### Step 6 — Get public IP
+
+```bash
+aws ec2 describe-instances \
+  --instance-ids $INSTANCE_ID \
+  --output table
+```
+
+```bash
+PUBLIC_IP=1.2.3.4
+echo $PUBLIC_IP
+```
+
+### Step 7 — Connect and test (wait ~4–5 min first)
+
+```bash
+ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@$PUBLIC_IP
+```
+
+Inside the VM:
+
+```bash
+getenforce
+findmnt /var/log
+findmnt /home
+findmnt /tmp
+findmnt /var/tmp
+ss -tln | grep 2222
+ss -tln | grep 35443
+curl -s http://127.0.0.1:35443/ | head
+exit
+```
+
+From your Mac:
+
+```bash
+curl -s http://$PUBLIC_IP:35443/
+```
+
+### Optional — User data (console / CLI) so httpd starts
+
+If httpd is missing after a console launch, add this **User data** at launch:
 
 ```yaml
 #cloud-config
@@ -158,26 +319,39 @@ runcmd:
   - [/bin/bash, /etc/fl-gold/bin/fl-gold-firstboot.sh]
 ```
 
-Leave “User data already base64 encoded” unchecked.  
-This runs gold-image firstboot so **Podman httpd starts on 35443**. Without it, SSH/mounts work but httpd often does not.
+---
 
-8. **Launch** → wait ~4–5 minutes (status OK + firstboot/podman).  
-9. Connect / verify:
+## Path B — AWS Console (click path)
+
+1. Region **US East (Ohio) / us-east-2**  
+2. **EC2 → AMIs → Owned by me → fl-rhel-gold → Launch instance from AMI**  
+3. Type: **t3.medium**  
+4. Key pair: any (SSH still uses `~/.ssh/fl-gold-poc.pem` as `fladmin1`)  
+5. Security group: allow **TCP 2222** and **TCP 35443** from **My IP**  
+6. Storage: at least **40 GiB**  
+7. **Advanced → User data** — paste the YAML above  
+8. Launch → wait 4–5 minutes  
+9. SSH and curl as in Step 7  
+
+---
+
+## Fast PoC (stock RHEL — not a gold AMI)
+
+Only if you want a quick cloud-init demo without Image Builder:
 
 ```bash
-ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@<Public-IP>
-getenforce
-for m in /var/log /home /tmp /var/tmp; do findmnt "$m"; done
-findmnt -n -o OPTIONS /tmp | grep noexec
-ss -tln | grep -E '2222|35443'
-curl -s http://127.0.0.1:35443/ | head
-curl -s http://<Public-IP>:35443/
+./launch-ec2.sh
+# wait 3–5 minutes
+./verify-remote.sh
+./terminate-ec2.sh
 ```
+
+This does **not** give Image Builder partitions. For Expansion Pack gold, use Path A.
 
 ---
 
 ## Security notes
 
 - Never commit `env.local`, `.pem`, or RHDP keys  
-- SG opens **2222** + **35443** (+ temporary **22** for bootstrap) from your IP only  
+- Open **2222** and **35443** only from your IP  
 - Delete the RHDP OPEN environment when finished  
