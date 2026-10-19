@@ -1,107 +1,181 @@
-# Part 1 practice video — ~15 minutes  
-## Server/Cloud OS TDP · Expansion Pack gold image
+# 15-minute script — aligned to presentation slides
 
-**Audience:** Casey Novak / Alex Lee (practice via RHSH)  
-**Record:** RHSH practice activity → submit recording link + deliverable links on the Google form  
-**Topic on form:** Server/Cloud OS TDP  
+**Deck:** [`Fedora-Lane-Expansion-Pack-Technical-Solution.pptx`](./Fedora-Lane-Expansion-Pack-Technical-Solution.pptx) (14 slides)  
+**Audience:** Casey Novak / Alex Lee (RHSH practice or customer)  
+**Screen:** Google Slides + terminal with one live gold PoC VM (AWS or Azure)  
+**Commands cheat sheet:** [`demo-commands-gold-image.md`](./demo-commands-gold-image.md)
 
-Use this script as a teleprompter. Keep Git open + one live PoC VM (Azure or AWS).  
-**Cheat sheet of commands:** [`demo-commands-gold-image.md`](./demo-commands-gold-image.md)
+Replace `[Name]` with your name. Speak naturally; timings are targets.
 
 ---
 
-## Timing map (required structure)
+## Timing map
 
-| Segment | Time | What you do |
+| Segment | Slides | Time |
 |---|---|---|
-| Opening | 1–2 min | Team + restated challenges |
-| Live walkthrough | 5–10 min | **Commands → gold image → VM** + prove on the VM |
-| Value summary | 2–5 min | Map solution → challenges |
-| Closing | 1–2 min | Next-phase recommendations |
-| **Total** | **~15 min** | |
+| Opening | 1–4 | ~1.5–2 min |
+| Live walkthrough | 5–9 | ~7–9 min |
+| Value summary | 10–11 | ~2–3 min |
+| Closing | 12–14 | ~1–1.5 min |
+| **Total** | **1–14** | **~15 min** |
 
 ---
 
-## 1. Opening (1–2 min)
+## OPENING (slides 1–4) · ~2 minutes
 
-**Why we are here / team / objective / agenda** (slides 1–4):
+### Slide 1 — Title (~15 sec)
 
-“Hi, I’m [Name], Junior Consultant on the FASTER Server/Cloud OS TDP for **Fedora Lane**.
+“Hi everyone. I’m **[Name]**, Junior Consultant on the FASTER **Server/Cloud OS** TDP for **Fedora Lane**.
 
-**Why we’re here:** Fedora Lane needs a secure, repeatable RHEL baseline for the e-commerce web fleet. We’re here to show a working Red Hat–based solution we designed, built, and can demo live.
-
-**Challenges we confirm:** roughly **1,600 servers**, mixed OS (Rocky, Ubuntu, CentOS Stream, Amazon Linux), long outages when change goes wrong, and a **container skills gap**. Expansion Pack wants a **manual / local Image Builder** gold image — not hosted console.redhat.com — for **AWS and Azure**.
-
-**Objective today:** confirm those challenges, walk the live implementation from the operator’s perspective, show value against each challenge, and leave you with **one clear next step**.
-
-**Agenda:** Opening → live walkthrough → value → closing. Let’s walk the solution.”
+Today I’ll walk our technical solution: a **RHEL gold image** built with **local Image Builder**, proven on **AWS and Azure**.”
 
 ---
 
-## 2. Live walkthrough (5–10 min)
+### Slide 2 — Why we are here (~30 sec)
 
-### Story to narrate (keep this diagram verbal or on one slide)
+“**Why we’re here:** Fedora Lane needs a secure, repeatable RHEL baseline for the e-commerce **web** fleet.
 
-```text
-Blueprint (Git)
-    → compose commands (Image Builder on builder VM)
-    → gold artifact (VHD or AMI)
-    → launch commands
-    → gold VM (SSH 2222 / httpd 35443)
-    → verify (+ reboot)
-```
+We designed, built, and can demo a working Red Hat–based gold image — not a slideware proposal.
 
-### 2a. Blueprint in Git (1 min)
+**Objective today:** confirm your challenges, walk the live implementation, show value, and leave you with **one clear next step**.”
 
-Screen: `solution/image-builder/fl-rhel-gold.toml`
+---
 
-“This is the recipe — partitions, firewall **2222/35443**, `fladmins`, SSH — versioned in Git. Image Builder reads this; we do **not** click hosted Image Builder.”
+### Slide 3 — Challenges we confirm (~40 sec)
 
-### 2b. Commands that create the gold image → VM (3–4 min)
+“Let me confirm the challenges we heard:
 
-**Prefer Azure** (pure path you ran). Put terminal + cheat sheet on screen. You do **not** need to re-run the long compose live — walk the command chain and say what each step produced.
+First — **inconsistent estate**: roughly **1,600** servers across Rocky, Ubuntu, CentOS Stream, Amazon Linux — no single web OS standard.
 
-Narrate:
+Second — **risky, untraceable change**: drift and ad-hoc fixes drive long outages.
 
-“**Step 1 — Builder + RHSM** (Image Builder needs a subscribed RHEL VM):”
+Third — a **container skills gap**: ops need a clear, repeatable way to run services in containers on RHEL.
+
+And Expansion Pack asks for a **manual / local Image Builder** gold image — **not** hosted console.redhat.com — deployable on **AWS and Azure**.
+
+Does that match your understanding? … Good — let’s continue.”
+
+---
+
+### Slide 4 — Agenda (~20 sec)
+
+“**Agenda:** opening — done; then a **live walkthrough** of architecture, build steps, and a gold VM; then **value**; then **closing** with one ask.
+
+Let’s walk the solution.”
+
+---
+
+## LIVE WALKTHROUGH (slides 5–9) · ~8 minutes
+
+### Slide 5 — What we implemented (~45 sec)
+
+“Here’s what we built:
+
+- A **versioned blueprint** in Git — the source of truth  
+- **Local RHEL Image Builder** composing a gold **AMI** for AWS and **VHD** for Azure  
+- VMs launched **from that gold image**, not stock Marketplace OS  
+- Expansion Pack controls baked in  
+- **httpd as a container** on port **35443**  
+- A working deployment we can prove live — SSH **2222**, curl **35443**
+
+I’ll show the architecture next.”
+
+*(Optional 10s: flash `solution/image-builder/fl-rhel-gold.toml` in the IDE.)*
+
+---
+
+### Slide 6 — Solution architecture (~1.5 min)
+
+Point at the flow left to right:
+
+“This is the factory:
+
+1. **TOML** — blueprint with `distro=rhel-10.x` — source of truth in Git  
+2. **Local Image Builder** — on a subscribed RHEL 10 host  
+3. **Gold disk `.raw`** — hardened RHEL disk file  
+4. **AWS AMI** — and the same recipe gives an **Azure VHD**  
+5. **Web nodes** — identical launches from that catalog image  
+
+We do **not** snowflake each server.
+
+On **every** VM from the gold image you get:
+
+- SSH on **2222** — `fladmin1` / `fladmin2`, key-only  
+- **httpd in Podman** on **35443**  
+- Firewall only those ports  
+- **SELinux enforcing**  
+- Separate mounts and **`/tmp` noexec**  
+
+That’s the Expansion Pack baseline, baked in.”
+
+---
+
+### Slide 7 — Build steps · what we run (~2–2.5 min)
+
+“Here’s what we actually run — you don’t need to watch a full hour-long compose live.
+
+**1 — Blueprint in Git** — `fl-rhel-gold.toml` — partitions under 5 GiB for `/var/log`, `/home`, `/tmp`, `/var/tmp`, users, firewall.
+
+**2 — Builder + RHSM** — Image Builder needs `sudo rhc connect` on the builder.
+
+**3 — Compose** — `image-builder build ami` → produces a **`.raw`** on the builder.
+
+**4 — Upload + register** — S3 plus the **`vmimport`** role → AMI named **`fl-rhel-gold`**.
+
+**5 — Launch** — EC2 from that AMI; security group opens **2222** and **35443**.
+
+**6 — Prove** — SSH and curl; we also have `verify-remote.sh`.
+
+Same recipe on Azure: compose **vhd** → managed image → launch VM.
+
+*(Show briefly — pick AWS or Azure; don’t run full compose:)*
 
 ```bash
+# AWS path (narrate)
+cd solution/cloud/aws
+# ./setup-vmimport-role.sh
+# ./compose-on-builder.sh          # → .raw → AMI
+# ./launch-gold-ami.sh
+
+# or Azure
 cd solution/cloud/azure
-./compose-vhd-on-azure-builder.sh
-# ssh -i ~/.ssh/fl-gold-poc.pem azureuser@<BUILDER_IP>
-# sudo rhc connect
-# ./compose-vhd-on-azure-builder.sh --continue <BUILDER_IP>
+# ./compose-vhd-on-azure-builder.sh
+# ./create-image.sh && ./launch-vm.sh
 ```
 
-“That runs `image-builder` compose type **vhd** from our blueprint → gold disk file on the builder.”
+Docs: `docs/how-to-build-and-run.md` and the AWS gold AMI runbook.”
 
-“**Step 2 — Gold artifact into Azure** (page blob → managed image):”
+---
 
-```bash
-./upload-vhd-from-azure-builder.sh <BUILDER_IP>   # if upload step was separate
-./create-image.sh                                 # managed image fl-rhel-gold
-```
+### Slide 8 — Critical decisions (~1 min)
 
-“**Step 3 — Spin VM from the gold image** (not from a stock gallery image):”
+“A few decisions worth calling out:
 
-```bash
-./launch-vm.sh
-# → PoC VM IP, SSH port 2222, httpd 35443
-```
+- **Local Image Builder**, not hosted console — matches Expansion Pack.  
+- **One blueprint, two clouds** — same controls on AWS and Azure.  
+- **Replace in waves** from a frozen gold image — we don’t compose 1,600 times, and we don’t swap root on live prod as the primary model.  
+- **Firstboot / User data** starts httpd — the image has the tooling; launch finishes the service.  
+- **App updates** can land on the httpd volume without a new AMI; **OS/hardening** changes mean a **new** gold image.”
 
-“Same idea on **AWS**: `./compose-on-builder.sh` → gold **AMI** → `./launch-gold-ami.sh`. One blueprint, two cloud artifacts.”
+---
 
-Optional 20s: open `docs/azure-gold-vhd-poc-runbook.md` or README “How to run” so reviewers see it is repeatable.
+### Slide 9 — What we prove on the live VM (~2.5–3 min) ⭐ DEMO
 
-### 2c. Prove the gold VM (3–4 min) — end-user view
-
-SSH into the **PoC** VM that came from that image (not the builder):
+“Now the live proof — this is a VM **launched from the gold image**.”
 
 ```bash
 ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@<POC_IP>
+```
+
+Run slowly so cameras catch output:
+
+```bash
 getenforce
-findmnt /var/log /home /tmp /var/tmp
-findmnt -o OPTIONS /tmp          # noexec
+findmnt /var/log
+findmnt /home
+findmnt /tmp
+findmnt /var/tmp
+findmnt -n -o OPTIONS /tmp | grep noexec
 ss -tln | grep -E '2222|35443'
 curl -s http://127.0.0.1:35443/ | head
 exit
@@ -111,58 +185,107 @@ From laptop:
 
 ```bash
 curl -s http://<POC_IP>:35443/
-cd solution/cloud/azure    # or aws
-./verify-remote.sh         # show PASS
-# mention: az vm restart … / aws reboot, then verify again
+# optional:
+# ./verify-remote.sh
 ```
 
-Say: “These checks are on a VM **launched from the gold image** we just described — Expansion Pack satisfied.”
+“You see **SELinux Enforcing**, separate mounts, **noexec** on `/tmp`, listeners on **2222** and **35443**, and the Fedora Lane web page from the **httpd container**.
+
+Same checklist passed on **AWS and Azure**, including after **reboot**.
+
+That’s the Expansion Pack satisfied on a real cloud VM.”
 
 ---
 
-## 3. Value summary (2–5 min)
+## VALUE SUMMARY (slides 10–11) · ~2.5 minutes
 
-**How this addresses the challenges** (slide 9):
+### Slide 10 — How this addresses the challenges (~1.5 min)
+
+“Back to your challenges:
 
 | Challenge | What we delivered |
 |---|---|
-| Inconsistency | One blueprint → `compose` → repeatable VHD/AMI → identical VMs |
+| Inconsistency | One Git blueprint → identical AMI/VHD baselines |
 | Risky change | Hardened SSH/sudo baked in; rebuild from Git anytime |
-| Container skills gap | httpd **container** on 35443 on every gold VM |
-| Dual cloud | Same factory → Azure **and** AWS proven |
+| Container skills gap | httpd runs as a **container** on every gold web VM |
+| Dual cloud | Proven path on **AWS and Azure** |
 
-**Future possibilities we leave open** (slide 10):
-
-“This does not lock you in. You can feed the gold image into Launch Templates / ASG or Azure Scale Sets, recompose new versions from Git for Day-2, add OpenSCAP later on the same factory, or use Kickstart / Image Mode already in the repo. It also fits existing CI/CD and change-control.”
+So the technical solution maps directly to what Fedora Lane asked for.”
 
 ---
 
-## 4. Closing (1–2 min)
+### Slide 11 — Future possibilities (~1 min)
 
-**Core message + one concrete next step** (slides 11–12):
+“This also leaves the door open:
 
-“**Core message:** Fedora Lane can standardize the web OS with a repeatable RHEL gold image — Image Builder, Git as source of truth, proven on AWS and Azure, Expansion Pack controls included.
+- Scale with Launch Templates / ASG or Azure Scale Sets  
+- Day-2: change blueprint → new gold version → replace waves  
+- Stretch: **OpenSCAP CIS** on the same factory — we haven’t done that yet; it’s next  
+- Deploy apps onto the httpd volume without rebuilding the AMI  
+- Fit into your existing CI/CD and change control  
 
-**One next step:** approve a **non-prod pilot** — launch web nodes from the gold AMI / Azure image this month. After that, wave-replace selected prod pools.
+Kickstart and Image Mode stay in the repo as alternate factories if you prefer them later.”
 
-Repo has the README, runbooks, and scripts — anyone can re-run the same path. Thank you — questions welcome.”
+---
+
+## CLOSING (slides 12–14) · ~1.5 minutes
+
+### Slide 12 — Core message (~30 sec)
+
+“**Core message:** Fedora Lane can standardize the e-commerce web OS with a **repeatable RHEL gold image** — Red Hat Image Builder, Git as source of truth, Expansion Pack controls included, proven on AWS and Azure.”
+
+---
+
+### Slide 13 — One concrete next step (~40 sec)
+
+“**One next step:** approve a **non-prod pilot** — launch web nodes from the gold AMI or Azure image.
+
+Keep Git as change control; use Launch Template / scale set for new capacity.
+
+After the pilot: wave-replace selected prod pools.
+
+That’s the ask.”
+
+---
+
+### Slide 14 — Thank you (~20 sec)
+
+“Everything is in the Git repo — README, how-to-build-and-run, AWS and Azure runbooks, verify checklist.
+
+Thank you — I’m happy to take questions.”
+
+---
+
+## Teleprompter one-pager (if you run short / long)
+
+| If short on time | Skip / shorten |
+|---|---|
+| Under 13 min | Shorten slide 7 command paste; keep live demo (slide 9) |
+| Over 16 min | Don’t re-explain architecture on slide 7; cut OpenSCAP sentence |
+
+| Must not skip | Why |
+|---|---|
+| Challenges (slide 3) | Opening requirement |
+| Architecture or build steps (6 or 7) | Shows what you built |
+| Live VM demo (slide 9) | Walkthrough requirement |
+| Challenge → value (slide 10) | Value requirement |
+| One next step (slide 13) | Closing requirement |
 
 ---
 
 ## Recording checklist
 
-- [ ] Opening: Fedora Lane challenges + local Image Builder  
-- [ ] Showed blueprint in Git  
-- [ ] Walked **compose → image → launch** commands (Azure and/or AWS)  
-- [ ] Live gold VM: 2222, SELinux, mounts, curl 35443  
-- [ ] Verify PASS (+ reboot mentioned)  
-- [ ] Value mapped to challenges  
-- [ ] Next-phase close  
-- [ ] No secrets on screen  
+- [ ] Slide 1–4: team, why, challenges, agenda  
+- [ ] Slide 6 or 7: architecture / build path  
+- [ ] Slide 8: at least one critical decision  
+- [ ] Slide 9: live SSH + mounts + curl 35443  
+- [ ] Slide 10–11: value + future  
+- [ ] Slide 12–13: core message + non-prod pilot ask  
+- [ ] No secrets / keys on screen  
 
 ---
 
 ## After recording
 
-1. RHSH practice → retrieve recording link.  
-2. Google form: topic **Server/Cloud OS TDP** + links in [`part1-submission-guide.md`](./part1-submission-guide.md).  
+1. RHSH → get recording link  
+2. Google form: topic **Server/Cloud OS TDP** + links in [`part1-submission-guide.md`](./part1-submission-guide.md)  
