@@ -142,13 +142,36 @@ curl -s "http://${PUBLIC_IP}:35443/"
 
 ### AWS Console
 
-1. **EC2** → **AMIs** (Owned by me) → select **fl-rhel-gold** → **Launch instance from AMI**.  
-2. Instance type e.g. `t3.medium`; choose key pair.  
-3. Network: VPC/subnet; auto-assign public IP if needed.  
-4. Security group inbound: **TCP 2222** and **TCP 35443** from your IP (not port 22).  
-5. Root volume ≥ 40 GiB → **Launch**.  
-6. Connect: `ssh -i key.pem -p 2222 fladmin1@<Public-IP>`  
-7. Test: `http://<Public-IP>:35443/`
+1. Region **US East (Ohio) `us-east-2`**.  
+2. **EC2** → **AMIs** (Owned by me) → select **fl-rhel-gold** → **Launch instance from AMI**.  
+3. Instance type **`t3.medium`** (preferred; `t2` shows 2/2 status checks, `t3` shows 3/3 — both OK).  
+4. Key pair: any (login as `fladmin1` still uses the key baked into the AMI, e.g. `~/.ssh/fl-gold-poc.pem`).  
+5. Network: public IP enabled; security group with **TCP 2222** + **TCP 35443** from **My IP** (reuse `fl-rhel-gold-poc-sg` if present). Do **not** rely on port 22.  
+6. Storage ≥ 40 GiB.  
+7. **Advanced details → User data** (required for httpd on console launches) — paste:
+
+```yaml
+#cloud-config
+runcmd:
+  - [rm, -f, /var/lib/fl-gold-firstboot-done]
+  - [/bin/bash, /etc/fl-gold/bin/fl-gold-firstboot.sh]
+```
+
+Leave “User data already base64 encoded” unchecked.  
+This runs gold-image firstboot so **Podman httpd starts on 35443**. Without it, SSH/mounts work but httpd often does not.
+
+8. **Launch** → wait ~4–5 minutes (status OK + firstboot/podman).  
+9. Connect / verify:
+
+```bash
+ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@<Public-IP>
+getenforce
+for m in /var/log /home /tmp /var/tmp; do findmnt "$m"; done
+findmnt -n -o OPTIONS /tmp | grep noexec
+ss -tln | grep -E '2222|35443'
+curl -s http://127.0.0.1:35443/ | head
+curl -s http://<Public-IP>:35443/
+```
 
 ---
 

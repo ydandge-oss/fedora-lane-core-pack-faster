@@ -42,6 +42,15 @@ If the gold AMI already exists and you do not want `./launch-gold-ami.sh`, use r
 
 Full copy-paste: [`aws/README.md`](./aws/README.md) section **Launch from gold AMI without project scripts**, and [`docs/launch-gold-image-cli-and-console.md`](../../docs/launch-gold-image-cli-and-console.md).
 
+**Console:** region `us-east-2`, SG ports **2222** + **35443**, and **User data** to run firstboot (otherwise httpd on 35443 may not start):
+
+```yaml
+#cloud-config
+runcmd:
+  - [rm, -f, /var/lib/fl-gold-firstboot-done]
+  - [/bin/bash, /etc/fl-gold/bin/fl-gold-firstboot.sh]
+```
+
 Quick AMI id lookup:
 
 ```bash

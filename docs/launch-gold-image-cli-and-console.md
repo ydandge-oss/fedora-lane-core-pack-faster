@@ -77,22 +77,41 @@ Optional user-data (cloud-init) can be passed with `--user-data file://cloud-ini
 
 ### B) AWS Console steps
 
-1. Open **EC2** → **AMIs** (Owned by me) → select **fl-rhel-gold** (or your AMI name) → **Launch instance from AMI**.  
-2. **Name:** e.g. `fl-rhel-gold-vm`.  
-3. **Instance type:** e.g. `t3.medium`.  
-4. **Key pair:** choose an existing key (or create one and download `.pem`).  
-5. **Network:** VPC + subnet with public IP if you need SSH from internet.  
-6. **Firewall (security group):**  
-   - Inbound **TCP 2222** from your IP (SSH)  
-   - Inbound **TCP 35443** from your IP (httpd)  
-   - Do **not** rely on port 22 — gold image uses **2222**.  
-7. **Storage:** ≥ 40 GiB gp3 root.  
-8. **Launch instance**.  
-9. Wait until **Running** + status checks OK.  
-10. Connect: `ssh -i key.pem -p 2222 fladmin1@<Public-IP>`  
-11. Browser/curl: `http://<Public-IP>:35443/`
+1. Set region to **US East (Ohio) `us-east-2`** (where `fl-rhel-gold` was built).  
+2. Open **EC2** → **AMIs** (Owned by me) → select **fl-rhel-gold** → **Launch instance from AMI**.  
+3. **Name:** e.g. `fl-rhel-gold-vm`.  
+4. **Instance type:** prefer **`t3.medium`** (`t2` = 2/2 checks; `t3` = 3/3; both fine for Expansion Pack).  
+5. **Key pair:** choose/create one (AWS requires it). SSH as `fladmin1` uses the key **baked into the AMI** (e.g. `~/.ssh/fl-gold-poc.pem`), not necessarily the new console key.  
+6. **Network:** VPC + subnet; auto-assign public IP if needed.  
+7. **Firewall (security group):**  
+   - Reuse `fl-rhel-gold-poc-sg` or create rules: inbound **TCP 2222** + **TCP 35443** from **My IP**  
+   - Do **not** rely on port 22 — gold image uses **2222**  
+   - If your public IP changes, add **My IP** again (SG is not “allow everyone”)  
+8. **Storage:** ≥ 40 GiB gp3 root.  
+9. **Advanced details → User data** (needed so httpd starts on console launches):
+
+```yaml
+#cloud-config
+runcmd:
+  - [rm, -f, /var/lib/fl-gold-firstboot-done]
+  - [/bin/bash, /etc/fl-gold/bin/fl-gold-firstboot.sh]
+```
+
+SG opens the ports; User data **runs firstboot** so Podman httpd listens on **35443**. Without User data, mounts/SSH work but httpd often does not.
+
+10. **Launch instance** → wait until Running + status OK (~4–5 min for firstboot/podman).  
+11. Connect / verify:
+
+```bash
+ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@<Public-IP>
+for m in /var/log /home /tmp /var/tmp; do findmnt "$m"; done
+ss -tln | grep -E '2222|35443'
+curl -s http://127.0.0.1:35443/ | head
+curl -s http://<Public-IP>:35443/
+```
 
 ---
+
 
 ## Azure — from gold managed image
 
