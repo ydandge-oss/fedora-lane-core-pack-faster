@@ -1,0 +1,15 @@
+[Unit]
+Description=Fedora Lane gold-image httpd (container)
+After=network-online.target fl-gold-firstboot.service
+Wants=network-online.target
+
+[Container]
+Image=localhost/fl-httpd-gold:latest
+PublishPort=35443:8080
+Volume=/opt/fl/httpd-gold/html:/var/www/html:Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

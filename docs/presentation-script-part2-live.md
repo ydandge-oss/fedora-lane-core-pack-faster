@@ -1,123 +1,47 @@
-# 15-minute speaker script — Part 2 (Live POD presentation)  
-## Junior Consultant · Fedora Lane Core Pack
+# 15-minute script — Part 2 (Live)  
+## Primary: RHEL Image Builder
 
-**Presenter:** Yash Dandge, Junior Consultant, Red Hat  
-**Audience (SME personas):** Alex Lee (Infra/Ops), Casey Novak (Linux Eng) — peers/manager may listen  
-**Timebox:** 15 minutes + Q&A after  
-
-> Live tip: Speak *to* Alex and Casey by name. Do not read the script. Pre-start the inventory-sync API. Have parking-lot notepad ready for the follow-up email.
+**Audience:** Casey Novak / Alex Lee  
 
 ---
 
 ## Opening (1:30)
 
-**Why we’re here**  
-“Thanks for the time today. We’re here because Fedora Lane asked Red Hat Consulting to help tackle the operational complexity of your global hybrid and multi-cloud environment — so Application Development can modernize without Infrastructure absorbing another unmanaged snowflake.”
+“Thanks for the time. Your Expansion Pack asks for a manual RHEL gold image for the e-commerce web fleet — not hosted Image Builder.
 
-**Team intro**  
-“I’m Yash Dandge, Junior Consultant. I’ve been hands-on building a Platform Consistency Pilot against the challenges in your Core Pack.”
-
-**Confirm the problem**  
-“Alex, Casey — you’ve got Virginia and Frankfurt on VMware, boutique closets, AWS for e-commerce, Azure for specific apps. Without unified management, servers drift, automation stays manual, e-commerce portability suffers, and Ren’s audit evidence gets harder every quarter.”
-
-**Objective**  
-“Today I’ll walk through the pilot I built, show it live, and leave you with one concrete next step.”
-
-**Agenda**  
-“Live walkthrough, short value summary mapped to your teams, then close. Happy to take deep questions after — or park them for email within two days.”
+We used **local RHEL Image Builder**: a TOML blueprint on a builder VM, composed to **AMI** and **VHD**, and proved both on RHDP AWS and Azure (verify + reboot). I’ll walk the blueprint and show the live checks.”
 
 ---
 
-## Live walkthrough (8:00)
+## Walkthrough (8:00)
 
-### 1. Architecture in one breath (45 sec)
+### Decision (45s)
 
-“GitHub is the source of truth. Ansible inventory models `na_dc`, `emea_dc`, `boutiques`, and `cloud_linux`. Playbooks apply a common and security baseline. Separately, a Boutique Inventory Sync API — the tool class your Core Pack already describes between SAP and PoS — runs in Docker Compose so we can prove portability without touching SAP.”
+“Alex, Casey — Image Builder is Red Hat’s supported compose path for cloud images. One blueprint, repeatable `ami`/`vhd`, Expansion Pack controls baked in.”
 
-### 2. Critical decision (45 sec)
+### Live primary (5:30)
 
-“I started with **Ansible + Git**, not a greenfield platform rewrite. Casey, that matches your need for centralized Linux standards. Alex, it’s something your team can review with `--check` before it touches anything real.”
+Cloud VM: SSH 2222, mounts, SELinux, firewall, httpd container 35443, verify script, reboot story.  
+Optional: show `image-builder list` / compose command from the builder VM recording.
 
-### 3. Show inventory + check mode (2:30)
+### If asked about alternates (1:45)
 
-```bash
-cd solution/ansible
-ansible-inventory -i inventory/hosts.yml --graph
-ansible-playbook -i inventory/hosts.yml playbooks/site.yml --check
-```
-
-**Tell → show → tell**  
-- **Tell:** “You’ll see the hybrid host model, then a dry-run of the baseline.”  
-- **Show:** graph + check output.  
-- **Tell:** “That’s the opposite of boutique SSH firefighting.”
-
-### 4. Show working sync service (3:00)
-
-```bash
-curl -s http://localhost:8080/health | jq .
-curl -s http://localhost:8080/api/v1/sync/status | jq .
-```
-
-**Tell → show → tell**  
-- **Tell:** “This is the Boutique Inventory Sync pattern — SAP stays the system of record; we modernize the sync edge.”  
-- **Show:** endpoints.  
-- **Tell:** “Cameron gets a portable service; Ren sees secrets kept out of the image.”
-
-Optional polish if time:
-
-```bash
-# Re-run playbook to show idempotency
-ansible-playbook -i inventory/hosts.yml playbooks/site.yml --check
-```
-
-### 5. What we deliberately did *not* do (30 sec)
-
-“We did not claim a full multi-cloud control plane or a SAP migration. Anya asked for small, valuable, real. This is that first milestone.”
+Kickstart and Image Mode (bootc) are in the same repo as alternate factories — same checklist.
 
 ---
 
-## Value summary (3:00)
+## Value (3:00)
 
-| Stakeholder | Value |
-|---|---|
-| **Casey** | Enforceable Linux baseline from Git |
-| **Alex** | Reviewable automation; Day-2 starts with inventory truth |
-| **Cameron** | Portable sync service as modernization proof point |
-| **Ren** | Baseline + secret hygiene → less tribal audit pain |
-| **Anya** | Tangible step toward agility without boiling the ocean |
-
-**Future left open**  
-“Third-party integrations on the sync API, Expansion Pack TDP technologies layered on the same Git discipline, tighter evidence packs for Ren.”
+Casey — standard + container via systemd  
+Alex — deployable AMI/VHD from one blueprint  
+Ren — SELinux, noexec tmp, minimal ports  
+Cameron — predictable web baseline  
+Anya — milestone now; scale by re-composing the blueprint  
 
 ---
 
 ## Closing (1:30)
 
-**Core message**  
-“Hybrid complexity and drift are the Core Pack’s root issue. Git plus automation, proven with a real boutique sync pattern, is how we start realized value.”
+“**One next step:** pilot the Image Builder gold image on non-prod web this month.
 
-**One next step**  
-“I’d like a **90-minute workshop** with you both — Casey and Alex — to map this inventory model to your actual Linux estate and agree what ‘done’ looks like before the next Practice Activity Expansion Pack build.”
-
-**Close**  
-“I’ll send a follow-up within two days with the repo link, solution overview, and answers to anything we park. Questions?”
-
----
-
-## Live Q&A posture
-
-- Answer in 30–60 seconds; offer to deep-dive offline.  
-- If you don’t know: “Good question — I’ll confirm and include it in the follow-up email.”  
-- See [sme-qa-prep.md](./sme-qa-prep.md).
-
----
-
-## Timing cheat sheet (Part 2)
-
-| Segment | Target |
-|---|---|
-| Opening | 1:30 |
-| Walkthrough | 8:00 |
-| Value | 3:00 |
-| Closing | 1:30 |
-| Buffer before Q&A | 1:00 |
+Follow-up email in two days with repo and parking-lot answers. Questions?”

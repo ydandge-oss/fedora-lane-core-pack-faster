@@ -1,49 +1,23 @@
-# Technical solution — Platform Consistency Pilot
+# Technical solutions — Expansion Pack gold image
 
-Runnable practice build for the **Fedora Lane Core Pack** challenges.
+| Path | Directory | Summary |
+|---|---|---|
+| **Primary — Image Builder** | [`image-builder/`](./image-builder/) | Local RHEL `image-builder` CLI: blueprint → `ami`/`vhd`/`qcow2` |
+| Alt A — Kickstart | [`kickstart/`](./kickstart/) | Classic Anaconda recipe → VM disk → cloud |
+| Alt B — Image Mode | [`image-mode/`](./image-mode/) | RHEL 10 `bootc` Containerfile → local BIB → cloud |
 
-## Components
+## Shared components
 
-| Path | Purpose |
+| Path | Used by |
 |---|---|
-| [ansible/](./ansible/) | Inventory model + baseline playbooks |
-| [inventory-sync/](./inventory-sync/) | Boutique Inventory Sync sample API (Docker Compose) |
-| [requirements.txt](./requirements.txt) | Python deps for Ansible control node |
+| [`container/`](./container/) | Kickstart path httpd assets |
+| [`systemd/`](./systemd/) | Kickstart Quadlet unit |
+| [`scripts/verify-gold-image.sh`](./scripts/verify-gold-image.sh) | **All** paths after cloud deploy |
+| [`scripts/apply-runtime-hardening.sh`](./scripts/apply-runtime-hardening.sh) | Kickstart alternative (no KS) |
+| [`cloud/`](./cloud/) | AWS / Azure OPEN import steps |
+| [`openscap/`](./openscap/) | Stretch CIS |
 
-## Demo A — Ansible (Casey / Alex)
+## Which path for the live demo?
 
-```bash
-cd ansible
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r ../requirements.txt
-
-ansible-inventory -i inventory/hosts.yml --graph
-ansible-playbook -i inventory/hosts.yml playbooks/site.yml --check
-```
-
-By default the inventory points `ansible_connection=local` at a single demo host so you can run without Fedora Lane servers. See comments in `inventory/hosts.yml` for how you would map real groups later.
-
-## Demo B — Inventory Sync API (Cameron / Ren)
-
-```bash
-cd inventory-sync
-docker compose up --build -d
-curl -s http://localhost:8080/health
-curl -s http://localhost:8080/api/v1/sync/status
-docker compose down
-```
-
-## Cleanup
-
-```bash
-# Ansible venv
-rm -rf ansible/.venv
-
-# Containers
-cd inventory-sync && docker compose down --rmi local
-```
-
-## Secrets
-
-- Do not put BMC passwords, API tokens, or cloud keys in Git.  
-- The sync API reads `SYNC_API_TOKEN` from the environment / Compose file (demo default is clearly fake).  
+- **Required / primary:** Image Builder end-to-end on one cloud (matches Expansion Pack + Red Hat docs).  
+- Kickstart / Image Mode: backup story or scale narrative if asked.

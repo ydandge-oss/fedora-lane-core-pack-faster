@@ -1,0 +1,101 @@
+#cloud-config
+# Fedora Lane Expansion Pack — runtime gold baseline on a stock RHEL AMI.
+# Proves SSH 2222, firewall, SELinux, fladmins, httpd container on 35443.
+# Separate LVM mounts require the Image Builder AMI (see compose-on-builder.sh).
+
+package_update: true
+packages:
+  - podman
+  - firewalld
+  - policycoreutils-python-utils
+  - sudo
+  - curl
+  - jq
+
+users:
+  - name: fladmin1
+    groups: [wheel, fladmins]
+    sudo: ALL=(ALL) ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - SSH_PUBLIC_KEY_PLACEHOLDER
+  - name: fladmin2
+    groups: [wheel, fladmins]
+    sudo: ALL=(ALL) ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - SSH_PUBLIC_KEY_PLACEHOLDER
+
+groups:
+  - fladmins
+
+write_files:
+  - path: /etc/ssh/sshd_config.d/00-fl-gold.conf
+    permissions: "0644"
+    content: |
+      Port 2222
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PubkeyAuthentication yes
+      AllowGroups fladmins
+  - path: /etc/sudoers.d/fladmins
+    permissions: "0440"
+    content: |
+      Defaults:%fladmins timestamp_timeout=0
+      %fladmins ALL=(ALL) ALL
+  - path: /etc/fl-gold/MARKER
+    permissions: "0644"
+    content: |
+      Fedora Lane RHEL Gold Image — AWS PoC (cloud-init baseline)
+      SSH: 2222 | httpd container: 35443 | SELinux: enforcing
+  - path: /opt/fl/httpd-gold/html/index.html
+    permissions: "0644"
+    content: |
+      <!DOCTYPE html>
+      <html lang="en">
+      <head><meta charset="utf-8"><title>Fedora Lane Gold Image</title></head>
+      <body>
+        <h1>Fedora Lane e-commerce web baseline</h1>
+        <p>httpd is running from a container on the RHEL gold image.</p>
+        <p>Port 35443 · SSH 2222 · SELinux enforcing</p>
+      </body>
+      </html>
+  - path: /opt/fl/httpd-gold/Containerfile
+    permissions: "0644"
+    content: |
+      FROM registry.access.redhat.com/ubi9/httpd-24
+      COPY html/ /var/www/html/
+  - path: /usr/local/sbin/fl-gold-firstboot.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      MARKER=/var/lib/fl-gold-aws-firstboot-done
+      [[ -f "$MARKER" ]] && exit 0
+      setenforce 1 || true
+      sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config || true
+      if command -v semanage >/dev/null 2>&1; then
+        semanage port -a -t ssh_port_t -p tcp 2222 2>/dev/null || semanage port -m -t ssh_port_t -p tcp 2222 || true
+        semanage port -a -t http_port_t -p tcp 35443 2>/dev/null || semanage port -m -t http_port_t -p tcp 35443 || true
+      fi
+      # best-effort noexec on /tmp if already a mount
+      mount -o remount,noexec,nodev,nosuid /tmp 2>/dev/null || true
+      systemctl enable --now firewalld
+      firewall-cmd --permanent --remove-service=ssh || true
+      firewall-cmd --permanent --add-port=2222/tcp
+      firewall-cmd --permanent --add-port=35443/tcp
+      firewall-cmd --reload
+      systemctl enable sshd
+      systemctl restart sshd
+      cd /opt/fl/httpd-gold
+      podman build -t localhost/fl-httpd-gold:latest . || true
+      podman rm -f fl-httpd 2>/dev/null || true
+      podman run -d --name fl-httpd --restart=always \
+        -p 35443:8080 \
+        -v /opt/fl/httpd-gold/html:/var/www/html:Z \
+        localhost/fl-httpd-gold:latest || true
+      touch "$MARKER"
+
+runcmd:
+  - [/usr/local/sbin/fl-gold-firstboot.sh]

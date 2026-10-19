@@ -1,9 +1,0 @@
----
-# Fedora Lane Platform Consistency Pilot
-# Maps to Core Pack challenges: drift, automation friction, siloed hybrid ops.
-- name: Apply Fedora Lane common + security baseline
-  hosts: all
-  gather_facts: true
-  roles:
-    - role: common
-    - role: security_baseline

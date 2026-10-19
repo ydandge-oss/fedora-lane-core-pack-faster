@@ -1,41 +1,27 @@
-# Junior Consultant — Core Pack deliverables checklist
+# Deliverables checklist — Server/Cloud OS Expansion Pack
 
-Tick these for **each** TDP Practice Activity. This repo currently covers the **Core Pack shell + practice technical solution**. When your Expansion Pack arrives, re-check the technical solution against that pack’s Must items.
+## Technical
 
-## Part 1 — Prepare & record
+- [x] **Primary** Image Builder assets ready (`solution/image-builder/`)  
+- [x] Blueprint compose `ami` and `vhd` proven  
+- [x] Manual build (local Image Builder — **not** hosted console.redhat.com)  
+- [x] Expansion Pack security/partition/port requirements verified on cloud  
+- [x] httpd container on 35443 with index.html  
+- [x] VM on **AWS** (AMI) **and** **Azure** (VHD) Blank OPEN  
+- [x] Survives reboot (both clouds)  
+- [x] GitHub branch `expansion-tdp-solution`; no secrets committed  
+- [x] `docs/solution-overview.md` + runbooks complete  
+- [x] Kickstart / Image Mode kept as alternate factories  
 
-- [x] Read Core Pack (customer + challenges + stakeholders)
-- [ ] Read this activity’s **Expansion Pack** (specific build requirements) — *when released*
-- [x] Technical solution in Git (**GitHub** for this practice; cohort GitLab if your program requires it)
-  - [x] Thorough `README.md` (purpose + setup/run)
-  - [x] Deploy assets (scripts, playbooks, Compose, etc.)
-  - [x] **No** credentials / secrets committed
-  - [x] Working deployment you can demo live (local Ansible + Docker Compose)
-- [x] `docs/solution-overview.md` — what you built, why, architecture, mapped to challenges
-- [x] 15-min presentation rehearsed
-  - [x] Opening (1–2 min)
-  - [x] Live walkthrough (5–10 min)
-  - [x] Value summary (2–5 min)
-  - [x] Closing + one next step (1–2 min)
-- [ ] Record yourself; submit recording + deliverables by due date
+## Presentations
 
-## Part 2 — Live POD call (~2 days after Part 1)
+- [ ] Part 1 video rehearsed (`docs/presentation-script-part1-video.md`)  
+- [ ] RHSH recording submitted + Google form (topic: Server/Cloud OS TDP)  
+- [ ] Form includes GitHub + doc links (`docs/part1-submission-guide.md`)  
+- [ ] Part 2 live rehearsed (`docs/presentation-script-part2-live.md`)  
+- [ ] Follow-up email within 2 days of Part 2  
 
-- [ ] Present **individually** (even if group helped build)
-- [ ] Answer SME questions (Casey Novak / Alex Lee personas)
-- [ ] Note parking-lot items for email
+## Stretch
 
-## After the call
-
-- [ ] Follow-up email within **2 days**
-- [ ] To: SME personas
-- [ ] Cc: Pod Host, Manager, faster@redhat.com
-- [ ] Includes: overview, next steps, answers to open questions
-
-## Success bar (Core Pack — Junior Consultants)
-
-| Dimension | Meets expectations |
-|---|---|
-| Technical solution | Meets requirements; works |
-| Communication & rationale | Clear what/why; tied to challenges |
-| Presentation | Professional, logical demo; accurate Q&A |
+- [ ] OpenSCAP CIS  
+- [x] Both AWS and Azure images  

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fedora Lane gold — only SSH 2222 and httpd 35443 -->
+<zone>
+  <short>fl-gold</short>
+  <description>Fedora Lane Expansion Pack gold image zone</description>
+  <service name="dhcpv6-client"/>
+  <port port="2222" protocol="tcp"/>
+  <port port="35443" protocol="tcp"/>
+</zone>

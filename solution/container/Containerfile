@@ -1,0 +1,3 @@
+# Fedora Lane gold-image httpd container (served on host port 35443)
+FROM registry.access.redhat.com/ubi9/httpd-24
+COPY html/ /var/www/html/

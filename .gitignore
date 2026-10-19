@@ -35,3 +35,30 @@ build/
 *.log
 tmp/
 .docker/
+
+# PoC outputs / local venv
+poc/output/
+solution/image-mode/output/
+
+# Terraform local state / secrets
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+provider.tf
+.env.aws
+.env.azure
+
+# AWS EC2 local env (contains account-specific settings)
+poc/cloud/aws/env.local
+solution/cloud/aws/env.local
+solution/cloud/aws/output/
+solution/cloud/azure/env.local
+solution/cloud/azure/output/
+
+# Local tool installs
+.tools/
+.venv-pptx/

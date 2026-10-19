@@ -1,28 +1,25 @@
-# SME Q&A prep — Alex Lee & Casey Novak  
-## Core Pack live call
+# SME Q&A — Casey / Alex (Server/Cloud OS)
 
-Aim for **30–60 second** answers. Park deep dives for email.
+### Why not hosted Image Builder?
+Expansion Pack requires a **manual** gold image. We use **local** RHEL Image Builder on a builder VM (`image-builder` CLI + blueprint TOML) — not console.redhat.com hosted builds.
 
-### 1. Why start with Ansible / Git instead of a big platform project?
-**Alex / Casey:** Because the Core Pack root issue is drift and siloed ops. Git + Ansible is a proven, reviewable control plane for the Linux fleet. It makes Day-2 better before we layer a larger TDP platform.
+### Why Image Builder (not Kickstart / bootc)?
+Matches Red Hat’s [composing a customized RHEL system image](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/composing_a_customized_rhel_system_image/image-builder-description) procedure and produces cloud-native `ami`/`vhd` directly. Kickstart and Image Mode remain in the repo as alternate factories with the same Expansion Pack controls.
 
-### 2. How does this help boutique closets that are “independently managed” today?
-**Casey:** We model them as an inventory group with the same baseline roles. Independence of *location* does not require independence of *standards*.
+### Why will this fix the 600 failed patches story?
+One OS major/minor + one agent/tooling baseline on the web tier removes “wrong libraries / missing agent / custom kernels” variance for that fleet segment.
 
-### 3. Won’t this just become another thing my stretched team has to run?
-**Alex:** Check-mode and idempotent playbooks reduce emergency SSH. The pilot is deliberately small. We agree ownership and a workshop before expanding scope.
+### How does this stop undocumented SSH changes?
+It doesn’t replace process alone — but key-only SSH, no root, passworded sudo, and a known baseline shrink the blast radius. Next: Session Recording + Web Console.
 
-### 4. How do you avoid touching SAP / breaking COTS?
-We don’t change SAP. The Inventory Sync sample sits at the edge (SAP ↔ PoS), matching the Core Pack description of that custom tool.
+### Why httpd in a container?
+Expansion Pack asked for it if possible, and it lets ops use **systemd** instead of copying fragile `podman run` lines (Challenge 3).
 
-### 5. What about security and audits for Ren?
-Baseline role + secrets kept out of Git + health/status endpoints create evidence artifacts. Phase 1 is a consistency pattern, not a full PCI CHD redesign.
+### Why non-standard ports?
+Required by pack; also reduces internet noise on 22/80.
 
-### 6. How does this help Cameron’s Kubernetes / CI/CD ambition?
-Portable containerized sync is a stepping stone: same artifact, fewer “works on this boutique server” surprises. Expansion Pack TDPs can extend the platform story later.
+### Can boutiques use this image?
+Web-tier gold image first; boutique Closet images can fork the same blueprint with smaller disk profiles later.
 
-### 7. What happens when Critical/High CVEs must be patched within days?
-Baseline automation is how you *roll* patches consistently. The pilot shows the delivery mechanism; patch content comes from your vulnerability process.
-
-### 8. Is GitHub acceptable vs Consulting GitLab?
-Core Pack specifies cohort GitLab. This practice repo is on GitHub for Cursor-linked workflow; we can mirror to GitLab for formal submission without changing content.
+### Day-2 patching?
+Re-compose the blueprint when CVEs land; rolling replace web nodes. Insights optional next phase.

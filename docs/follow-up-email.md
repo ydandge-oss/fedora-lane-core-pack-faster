@@ -1,58 +1,48 @@
-# Follow-up email draft  
-## Send within 2 days of the live POD presentation
+# Follow-up email — within 2 days of Part 2
 
 **To:** Casey Novak; Alex Lee *(SME personas)*  
-**Cc:** [Pod Host]; [Your Manager]; faster@redhat.com  
-**Subject:** Fedora Lane — Platform Consistency Pilot follow-up (Core Pack practice)
+**Cc:** [Pod Host]; [Manager]; faster@redhat.com  
+**Subject:** Fedora Lane — RHEL gold image (Server/Cloud OS TDP) follow-up
 
 ---
 
 Hi Casey, Alex,
 
-Thank you for the time on [date] and for the questions during the session.
+Thank you for the time on [date] discussing the Server/Cloud OS Expansion Pack solution.
 
 ## Overview
 
-We walked through a **Platform Consistency Pilot** aligned to the Fedora Lane Core Pack challenges:
+We demonstrated a **manually built RHEL gold image** using **local RHEL Image Builder** (blueprint → compose `ami`/`vhd` on a builder VM — not hosted console.redhat.com), addressing:
 
-- Hybrid/multi-cloud complexity without unified management  
-- Configuration drift and manual, error-prone operations  
-- Impact on e-commerce modernization and portability  
-- Difficulty enforcing one security baseline and preparing for PCI / GDPR / CCPA audits  
+1. Inconsistent server environment (~1,600 hosts / mixed OS)  
+2. Untraceable administrative changes and extended outages  
+3. Operational skills gap for container workloads  
 
-The working artifacts are in GitHub (practice source of truth):
+Key controls shown: separate `/var/log`, `/home`, `/tmp` (noexec), `/var/tmp`; SELinux enforcing; SSH **2222**; httpd **container** on **35443**; firewall limited to those ports; `fladmins` with passworded sudo; root/password SSH disabled; reboot persistence.
 
-**Repo:** https://github.com/ydandge-oss/fedora-lane-core-pack-faster  
+## Repository
 
-Key docs:
+https://github.com/ydandge-oss/fedora-lane-core-pack-faster/tree/expansion-tdp-solution  
 
-- Solution overview: `docs/solution-overview.md`  
-- Customer brief / challenges: `docs/customer-brief-fedora-lane.md`, `docs/challenges-and-stakeholders.md`  
+Primary path: `solution/image-builder/` · PoC: `docs/poc-steps-image-builder.md`  
 
-Demo components:
-
-- Ansible inventory + baseline playbooks (`solution/ansible/`)  
-- Boutique Inventory Sync sample API (`solution/inventory-sync/`)  
+(Please ensure `mflaim-eng` has access if using the private fork.)
 
 ## Next steps
 
-1. **90-minute workshop** (proposed) with Casey + Alex — map the inventory model to the real Linux estate and agree acceptance criteria.  
-2. Fold in the **Practice Activity Expansion Pack** requirements when released (Core Pack notes PA1 early Oct / PA2 early Nov / PA3 late Jan).  
-3. Align with Ren on which baseline controls should appear in the next audit evidence pack.  
+1. Pilot Image Builder AMI/VHD on non-prod web nodes.  
+2. Align admin keys / IdP with Ren’s access standards.  
+3. Optional: OpenSCAP CIS hardening pass; second cloud image.  
+4. Pair with Web Console / Session Recording for change visibility.
 
-Please reply with a preferred workshop slot, or I can send two to three options.
+## Parking-lot answers
 
-## Answers to questions we parked
-
-| # | Question | Answer |
-|---|---|---|
-| 1 | *[parking lot item]* | *[answer after the call]* |
-| 2 | *[parking lot item]* | *[answer after the call]* |
-
-If anything above needs correction or more detail, I’m happy to jump on a short follow-up.
+| Question | Answer |
+|---|---|
+| 1 | *[fill after call]* |
+| 2 | *[fill after call]* |
 
 Thanks again,  
 Yash Dandge  
-Junior Consultant  
-Red Hat  
-[your email]
+Junior Consultant, Red Hat  
+[email]

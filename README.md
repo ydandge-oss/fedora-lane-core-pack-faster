@@ -1,113 +1,138 @@
-# Fedora Lane — Junior Consultant Deliverables  
-## FASTER Core Pack (CY26/27)
+# Fedora Lane — Server/Cloud OS TDP  
+## Junior Consultant · Expansion Pack gold image
 
-**Role:** Junior Consultant  
-**Customer:** Fedora Lane (fictional)  
-**Source:** *Fedora Lane Core Pack for Solution Architects and Consultants*  
-**Git hosting:** GitHub (practice substitute for Consulting GitLab)
+**Branch:** [`expansion-tdp-solution`](https://github.com/ydandge-oss/fedora-lane-core-pack-faster/tree/expansion-tdp-solution)  
+**Repo:** https://github.com/ydandge-oss/fedora-lane-core-pack-faster  
 
-> Fictional FASTER practice content. For internal learning only. Do not distribute as official Red Hat collateral.
+**What this is:** A **repeatable RHEL gold image** for Fedora Lane’s e-commerce web tier, built with **local RHEL Image Builder** (not hosted console.redhat.com), proven on **AWS (AMI)** and **Azure (VHD)**.
 
-This repository is **Core Pack only**. It does **not** include any TDP Expansion Pack (for example OpenShift Bare Metal). The Core Pack defines the customer, challenges, stakeholders, and the junior consultant deliverable shape. When your Expansion Pack arrives for a specific TDP, fold that TDP’s build requirements into `solution/` and refresh the walkthrough sections.
+Upstream: [Composing a customized RHEL system image](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/composing_a_customized_rhel_system_image/image-builder-description)
 
----
+**How to build and run (start here):** [`docs/how-to-build-and-run.md`](./docs/how-to-build-and-run.md)
 
-## Junior Consultant deliverables (from the Core Pack)
-
-| # | Deliverable | Location |
-|---|---|---|
-| 1 | **Technical solution** — Git repo + README + deploy assets + working demo | this repo (`solution/`) |
-| 2 | **Project documentation** — solution overview tied to Fedora Lane challenges | [docs/solution-overview.md](./docs/solution-overview.md) |
-| 3 | **15-minute presentation** — opening, live walkthrough, value summary, closing | [docs/presentation-script-part1-video.md](./docs/presentation-script-part1-video.md) · [docs/presentation-script-part2-live.md](./docs/presentation-script-part2-live.md) |
-| 4 | **Follow-up email** — within 2 days after the live call | [docs/follow-up-email.md](./docs/follow-up-email.md) |
-
-Process reminder:
-
-- **Part 1:** record practice presentation + submit deliverables  
-- **Part 2:** live POD presentation; SMEs play **Casey Novak** and **Alex Lee**  
-- Submit **individually** even if you collaborated  
+> Never commit RHDP / cloud credentials (`env.local`, `.pem`, keys). Prefer a private remotes; add reviewers as required by your cohort.
 
 ---
 
-## What this practice solution demonstrates (Core Pack challenges)
+## Customer challenges → this solution
 
-Fedora Lane’s Core Pack pain is hybrid/multi-cloud complexity without unified management → **configuration drift**, **automation friction**, blocked **e-commerce modernization**, weak **portability**, **COTS constraints**, and **security/audit** toil.
-
-This repo implements a **Platform Consistency Pilot** you can run locally:
-
-1. **Ansible** inventories + playbooks that model NA DC / EMEA DC / boutique / cloud Linux hosts and apply a consistent baseline (Casey + Alex).  
-2. A **Boutique Inventory Sync** sample service (named in the Core Pack) you can run with Docker Compose to show a repeatable, portable modern app path (Cameron) with a clear security story (Ren).
-
-When a TDP Expansion Pack is released, replace or extend `solution/` with that TDP’s required Red Hat technology while keeping the customer narrative here.
+| Fedora Lane challenge | How we address it |
+|---|---|
+| Inconsistent estate (~1,600 servers) | One blueprint → repeatable `ami` / `vhd` |
+| Untraceable / risky change | Hardened SSH/sudo baked in; blueprint versioned in Git |
+| Container skills gap | httpd runs as a **container** on the gold image (port 35443) |
 
 ---
 
-## Quick start — working demo (local)
+## What’s in the repo
 
-### Prerequisites
+| Path | Purpose |
+|---|---|
+| [`solution/image-builder/`](./solution/image-builder/) | **Primary factory** — blueprint, firstboot, compose scripts |
+| [`solution/cloud/aws/`](./solution/cloud/aws/) | AWS Blank OPEN — compose AMI, launch, verify |
+| [`solution/cloud/azure/`](./solution/cloud/azure/) | Azure Blank OPEN — compose VHD, image, launch, verify |
+| [`solution/kickstart/`](./solution/kickstart/) | Alternate factory A |
+| [`solution/image-mode/`](./solution/image-mode/) | Alternate factory B (bootc) |
+| [`docs/how-to-build-and-run.md`](./docs/how-to-build-and-run.md) | **Build / upload / prove / day-2** (short guide) |
+| [`docs/`](./docs/) | Overview, runbooks, presentation scripts, checklist |
 
-- Python 3.11+  
-- `pip install -r solution/requirements.txt` (Ansible)  
-- Optional: Docker + Docker Compose for the inventory-sync API (local `uvicorn` also works)  
+---
 
-### 1. Ansible baseline (config-as-code)
+## Proven PoC status
+
+| Cloud | Artifact | Runbook | Status |
+|---|---|---|---|
+| **AWS** | Gold **AMI** | [`docs/aws-gold-ami-poc-runbook.md`](./docs/aws-gold-ami-poc-runbook.md) | Proven (verify + reboot) |
+| **Azure** | Gold **VHD** → managed image | [`docs/azure-gold-vhd-poc-runbook.md`](./docs/azure-gold-vhd-poc-runbook.md) | Proven (verify + reboot) |
+
+Shared Expansion Pack controls (both paths):
+
+- Separate `/var/log`, `/home`, `/tmp`, `/var/tmp` (&lt; 5 GiB); `/tmp` **noexec**  
+- SELinux **enforcing**  
+- SSH **2222** (key-only, no root)  
+- httpd **container** on **35443**  
+- `fladmins` + firewall limited to those ports  
+- Survives **reboot**  
+
+---
+
+## How to run (quick)
+
+### A) Azure gold image (pure Azure — recommended for demo)
+
+Full steps: [`docs/azure-gold-vhd-poc-runbook.md`](./docs/azure-gold-vhd-poc-runbook.md)
 
 ```bash
-cd solution/ansible
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r ../requirements.txt
+git checkout expansion-tdp-solution
+cd solution/cloud/azure
+cp -n env.example env.local   # set AZURE_SUBSCRIPTION_ID from Azure Blank OPEN
+az login && chmod +x *.sh
 
-# Dry-run against the local demo inventory (no real Fedora Lane servers)
-ansible-inventory -i inventory/hosts.yml --graph
-ansible-playbook -i inventory/hosts.yml playbooks/site.yml --check
+./compose-vhd-on-azure-builder.sh
+# ssh azureuser@<IP> && sudo rhc connect && exit
+# ./compose-vhd-on-azure-builder.sh --continue <IP>
+
+./create-image.sh && ./launch-vm.sh
+./verify-remote.sh
+# optional: az vm restart ... && ./verify-remote.sh
+./cleanup.sh
 ```
 
-### 2. Boutique Inventory Sync API
+### B) AWS gold AMI
+
+Full steps: [`docs/aws-gold-ami-poc-runbook.md`](./docs/aws-gold-ami-poc-runbook.md)
 
 ```bash
-cd solution/inventory-sync
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-export SYNC_API_TOKEN=demo-not-a-real-secret
-uvicorn app.main:app --host 127.0.0.1 --port 8080
-# other terminal:
-curl -s http://127.0.0.1:8080/health | jq .
-curl -s http://127.0.0.1:8080/api/v1/sync/status | jq .
+cd solution/cloud/aws
+cp -n env.example env.local   # RHDP AWS Blank OPEN keys
+export PATH="$PWD/../../.tools/aws-cli:$PATH"   # if using vendored CLI
+./compose-on-builder.sh       # or continue / reupload helpers
+./launch-gold-ami.sh && ./verify-remote.sh
+./terminate-ec2.sh
 ```
 
-Or with Docker: `docker compose up --build -d` from `solution/inventory-sync/`.
+### D) Dummy boutique app on a gold VM (no new image)
 
----
-
-## Folder map
-
+```bash
+cd solution/demo-app
+./deploy-to-vm.sh <poc-public-ip>
+# open http://<ip>:35443/  and  http://<ip>:35443/health.json
 ```
-README.md
-DELIVERABLES-CHECKLIST.md
-docs/
-  customer-brief-fedora-lane.md
-  challenges-and-stakeholders.md
-  solution-overview.md
-  presentation-script-part1-video.md   ← rehearse / record this
-  presentation-script-part2-live.md    ← live POD call
-  presentation-slides.md
-  follow-up-email.md
-  success-criteria.md
-  sme-qa-prep.md
-solution/
-  README.md
-  requirements.txt
-  ansible/          ← inventories + playbooks
-  inventory-sync/   ← sample microservice + Compose
+
+Details: [`solution/demo-app/README.md`](./solution/demo-app/README.md)
+
+### C) Blueprint only (any subscribed RHEL builder)
+
+```bash
+cd solution/image-builder
+sudo ./scripts/install-image-builder.sh
+./scripts/generate-blueprint.sh   # set real SSH public keys in TOML
+sudo ./scripts/compose.sh ami     # or: vhd
 ```
 
 ---
 
-## How presentations work
+## Documentation (client-facing)
 
-| Part | Script | Audience |
-|---|---|---|
-| Part 1 — recorded practice | [presentation-script-part1-video.md](./docs/presentation-script-part1-video.md) | You + AI feedback / manager / FASTER team |
-| Part 2 — live POD | [presentation-script-part2-live.md](./docs/presentation-script-part2-live.md) | SMEs as Casey Novak & Alex Lee |
+| Doc | Path |
+|---|---|
+| Solution overview | [`docs/solution-overview.md`](./docs/solution-overview.md) |
+| PoC index | [`docs/poc-steps.md`](./docs/poc-steps.md) |
+| Verification checklist | [`docs/verification-checklist.md`](./docs/verification-checklist.md) |
+| Part 1 video script (~15 min) | [`docs/presentation-script-part1-video.md`](./docs/presentation-script-part1-video.md) |
+| Demo commands (compose → gold VM) | [`docs/demo-commands-gold-image.md`](./docs/demo-commands-gold-image.md) |
+| Launch gold image (CLI + Console, no scripts) | [`docs/launch-gold-image-cli-and-console.md`](./docs/launch-gold-image-cli-and-console.md) |
+| Where / when / why to run commands | [`docs/where-when-why-commands.md`](./docs/where-when-why-commands.md) |
+| Part 2 live script | [`docs/presentation-script-part2-live.md`](./docs/presentation-script-part2-live.md) |
+| **Customer slides (Google Slides)** | [`docs/Fedora-Lane-Expansion-Pack-Technical-Solution.pptx`](./docs/Fedora-Lane-Expansion-Pack-Technical-Solution.pptx) · [how to open](./docs/customer-presentation-fedora-lane.md) |
+| Slide outline | [`docs/presentation-slides.md`](./docs/presentation-slides.md) |
+| Part 1 submission guide | [`docs/part1-submission-guide.md`](./docs/part1-submission-guide.md) |
 
-Both scripts are **15 minutes** and follow Core Pack structure: Opening → Walkthrough → Value summary → Closing.
+---
+
+## Demo tip (Part 1 video / Part 2 live)
+
+1. Open blueprint `solution/image-builder/fl-rhel-gold.toml` in Git.  
+2. Show a running PoC VM (AWS or Azure): SSH `:2222`, `getenforce`, `findmnt`, `curl :35443`.  
+3. Show `./verify-remote.sh` PASS (and mention reboot).  
+4. Close with pilot recommendation + Git as source of truth.  

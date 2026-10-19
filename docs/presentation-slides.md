@@ -1,15 +1,23 @@
-# Slide outline — 15-minute Junior Consultant presentation  
-## Copy into Google Slides / PowerPoint
+# Slide outline — Server/Cloud OS TDP (~15 min)
 
-Keep slides sparse. You talk; slides support.
+**Customer deck (upload to Google Slides):**  
+[`Fedora-Lane-Expansion-Pack-Technical-Solution.pptx`](./Fedora-Lane-Expansion-Pack-Technical-Solution.pptx)  
+**Instructions:** [`customer-presentation-fedora-lane.md`](./customer-presentation-fedora-lane.md)  
+**Spoken script:** [`presentation-script-part1-video.md`](./presentation-script-part1-video.md)
 
-1. **Title** — Fedora Lane · Platform Consistency Pilot · Yash Dandge, Junior Consultant  
-2. **Why we’re here** — Hybrid/multi-cloud complexity → drift, manual ops, audit pain  
-3. **Agenda** — Walkthrough · Value · Next step  
-4. **Challenges (Core Pack)** — 4 bullets max (silos/drift · automation · modernization/portability · security/audit)  
-5. **What we built** — Git + Ansible baselines + Boutique Inventory Sync  
-6. **Architecture** — simple diagram from solution overview  
-7. **Demo** — blank / terminal screenshot placeholder (“live”)  
-8. **Value by stakeholder** — Casey · Alex · Cameron · Ren · Anya  
-9. **One next step** — 90-minute inventory workshop  
-10. **Thank you / Questions** — repo URL + follow-up in 2 days  
+| # | Segment | Slide | One-liner |
+|---|---|---|---|
+| 1 | — | Title | Expansion Pack gold image briefing |
+| 2 | Opening | Why we are here | Team · why · objective |
+| 3 | Opening | Challenges | Confirm Fedora Lane problems |
+| 4 | Opening | Agenda | Transition to walkthrough |
+| 5 | Walkthrough | What we implemented | Blueprint → AMI/VHD → gold VM |
+| 6 | Walkthrough | **Solution architecture** | TOML → Builder → .raw → AMI → VMs |
+| 7 | Walkthrough | **Build steps** | Commands we run, in order |
+| 8 | Walkthrough | Critical decisions | Local IB · dual cloud · replace waves |
+| 9 | Walkthrough | Prove on VM | Expansion Pack + httpd:35443 live |
+| 10 | Value | Challenges addressed | Map solution → each challenge |
+| 11 | Value | Future possibilities | Scale · Day-2 · OpenSCAP · apps |
+| 12 | Closing | Core message | Repeatable RHEL gold image |
+| 13 | Closing | One next step | Approve non-prod pilot |
+| 14 | — | Thank you | Repo · Q&A |
