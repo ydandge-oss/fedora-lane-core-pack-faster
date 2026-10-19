@@ -72,6 +72,86 @@ Resume helpers: `continue-compose-on-builder.sh`, `reupload-ami-from-builder.sh`
 **Azure VHD only:** `./compose-vhd-on-builder.sh` → then [`../azure/`](../azure/) + [azure runbook](../../../docs/azure-gold-vhd-poc-runbook.md).  
 Pitfalls (RHSM, distro `rhel-10.x`, SG IP, sudo): see the runbook.
 
+---
+
+## Launch from gold AMI **without** project scripts
+
+Use this when the gold AMI already exists and the customer prefers raw **AWS CLI** or the **EC2 console**.  
+Gold VMs use **SSH 2222** and **httpd 35443** (not port 22).
+
+Shared reference: [`docs/launch-gold-image-cli-and-console.md`](../../../docs/launch-gold-image-cli-and-console.md)
+
+### AWS CLI (resolve AMI id + launch)
+
+```bash
+export AWS_REGION=us-east-2
+export AWS_DEFAULT_REGION="$AWS_REGION"
+
+# Gold AMI id (like Azure: az image show …)
+AMI_ID=$(aws ec2 describe-images --owners self \
+  --filters Name=name,Values=fl-rhel-gold Name=state,Values=available \
+  --query 'sort_by(Images,&CreationDate)[-1].ImageId' \
+  --output text)
+echo "AMI_ID=$AMI_ID"
+
+KEY_NAME=fl-gold-poc                    # existing EC2 key pair name
+INSTANCE_TYPE=t3.medium
+
+VPC_ID=$(aws ec2 describe-vpcs --filters Name=isDefault,Values=true \
+  --query 'Vpcs[0].VpcId' --output text)
+SUBNET_ID=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$VPC_ID" \
+  --query 'Subnets[0].SubnetId' --output text)
+
+SG_NAME=fl-gold-sg
+SG_ID=$(aws ec2 describe-security-groups \
+  --filters Name=group-name,Values="$SG_NAME" Name=vpc-id,Values="$VPC_ID" \
+  --query 'SecurityGroups[0].GroupId' --output text)
+if [[ -z "$SG_ID" || "$SG_ID" == "None" ]]; then
+  SG_ID=$(aws ec2 create-security-group \
+    --group-name "$SG_NAME" \
+    --description "Fedora Lane gold SSH 2222 + httpd 35443" \
+    --vpc-id "$VPC_ID" --query GroupId --output text)
+fi
+
+MYIP=$(curl -4 -fsS ifconfig.me)/32
+aws ec2 authorize-security-group-ingress --group-id "$SG_ID" \
+  --protocol tcp --port 2222 --cidr "$MYIP" 2>/dev/null || true
+aws ec2 authorize-security-group-ingress --group-id "$SG_ID" \
+  --protocol tcp --port 35443 --cidr "$MYIP" 2>/dev/null || true
+
+INSTANCE_ID=$(aws ec2 run-instances \
+  --image-id "$AMI_ID" \
+  --instance-type "$INSTANCE_TYPE" \
+  --key-name "$KEY_NAME" \
+  --security-group-ids "$SG_ID" \
+  --subnet-id "$SUBNET_ID" \
+  --associate-public-ip-address \
+  --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":40,"VolumeType":"gp3","DeleteOnTermination":true}}]' \
+  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=fl-rhel-gold-vm}]' \
+  --query 'Instances[0].InstanceId' --output text)
+
+aws ec2 wait instance-running --instance-ids "$INSTANCE_ID"
+PUBLIC_IP=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" \
+  --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+echo "PUBLIC_IP=$PUBLIC_IP"
+
+# After ~3–5 minutes:
+ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@$PUBLIC_IP
+curl -s "http://${PUBLIC_IP}:35443/"
+```
+
+### AWS Console
+
+1. **EC2** → **AMIs** (Owned by me) → select **fl-rhel-gold** → **Launch instance from AMI**.  
+2. Instance type e.g. `t3.medium`; choose key pair.  
+3. Network: VPC/subnet; auto-assign public IP if needed.  
+4. Security group inbound: **TCP 2222** and **TCP 35443** from your IP (not port 22).  
+5. Root volume ≥ 40 GiB → **Launch**.  
+6. Connect: `ssh -i key.pem -p 2222 fladmin1@<Public-IP>`  
+7. Test: `http://<Public-IP>:35443/`
+
+---
+
 ## Security notes
 
 - Never commit `env.local`, `.pem`, or RHDP keys  

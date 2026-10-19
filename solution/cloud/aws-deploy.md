@@ -36,4 +36,18 @@ sudo bash verify-gold-image.sh
 sudo reboot
 ```
 
+## Launch gold AMI **without** scripts (CLI + Console)
+
+If the gold AMI already exists and you do not want `./launch-gold-ami.sh`, use raw AWS CLI or the EC2 console.
+
+Full copy-paste: [`aws/README.md`](./aws/README.md) section **Launch from gold AMI without project scripts**, and [`docs/launch-gold-image-cli-and-console.md`](../../docs/launch-gold-image-cli-and-console.md).
+
+Quick AMI id lookup:
+
+```bash
+AMI_ID=$(aws ec2 describe-images --owners self \
+  --filters Name=name,Values=fl-rhel-gold Name=state,Values=available \
+  --query 'sort_by(Images,&CreationDate)[-1].ImageId' --output text)
+```
+
 **Never** commit AWS keys or RHDP passwords.
