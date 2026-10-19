@@ -22,6 +22,7 @@ Select topic: **Server/Cloud OS TDP**
 | Presentation script | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/presentation-script-part1-video.md |
 | Demo commands (compose → VM) | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/demo-commands-gold-image.md |
 | Where / when / why commands | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/where-when-why-commands.md |
+| Customer presentation (paste into Google Docs) | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/customer-presentation-fedora-lane.md |
 | Slide outline | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/presentation-slides.md |
 
 If your cohort also requires **Consulting GitLab (FASTER sub-group):** mirror or push the same `expansion-tdp-solution` branch there and submit **that** URL as the source of truth if the form asks for GitLab specifically.
