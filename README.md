@@ -88,6 +88,16 @@ export PATH="$PWD/../../.tools/aws-cli:$PATH"   # if using vendored CLI
 ./terminate-ec2.sh
 ```
 
+### D) Dummy boutique app on a gold VM (no new image)
+
+```bash
+cd solution/demo-app
+./deploy-to-vm.sh <poc-public-ip>
+# open http://<ip>:35443/  and  http://<ip>:35443/health.json
+```
+
+Details: [`solution/demo-app/README.md`](./solution/demo-app/README.md)
+
 ### C) Blueprint only (any subscribed RHEL builder)
 
 ```bash

@@ -114,6 +114,12 @@ else
   check "sshd on 2222" bash -c 'ss -ltn | grep -q ":2222"'
   check "httpd on 35443" bash -c 'ss -ltn | grep -q ":35443"'
   check "httpd responds" bash -c 'curl -sf --max-time 5 http://127.0.0.1:35443/ | grep -qi "Fedora Lane"'
+  # Soft: demo-app may be added via deploy-to-vm.sh without rebuilding gold
+  if curl -sf --max-time 5 http://127.0.0.1:35443/health.json 2>/dev/null | grep -qi "fedora-lane-demo-boutique"; then
+    check "demo boutique app" true
+  else
+    echo "INFO: demo boutique not deployed yet — run solution/demo-app/deploy-to-vm.sh"
+  fi
   check "gold marker" test -f /etc/fl-gold/MARKER
   check "fladmins group" getent group fladmins
   check "fladmin1 user" id fladmin1
