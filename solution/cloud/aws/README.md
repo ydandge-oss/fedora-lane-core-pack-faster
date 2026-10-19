@@ -55,37 +55,55 @@ aws sts get-caller-identity
 
 ---
 
-## Path A — Use our scripts (recommended)
+## Path A — Create gold AMI + launch PoC (scripts)
 
-### 1) Create gold AMI (once)
+**Detailed step-by-step:** [`docs/aws-gold-ami-poc-runbook.md`](../../../docs/aws-gold-ami-poc-runbook.md)
+
+### Create the gold AMI (do in order)
 
 ```bash
 chmod +x *.sh
+```
+
+**1. IAM role** (once) — lets AWS turn uploaded disk into AMI:
+
+```bash
 ./setup-vmimport-role.sh
+```
+
+**2. Launch builder + compose** (takes 1–2 hours first time):
+
+```bash
 ./compose-on-builder.sh
 ```
 
-On the builder, subscribe if asked:
+Save the builder IP it prints:
 
 ```bash
-ssh -i ~/.ssh/fl-gold-poc.pem ec2-user@<BUILDER_IP>
+BUILDER_IP=1.2.3.4
+```
+
+**3. Subscribe the builder** (Image Builder needs RHSM):
+
+```bash
+ssh -i ~/.ssh/fl-gold-poc.pem ec2-user@$BUILDER_IP
 sudo rhc connect
 exit
 ```
 
-If compose was interrupted:
+**4. If compose stopped, continue:**
 
 ```bash
-./continue-compose-on-builder.sh <BUILDER_IP>
+./continue-compose-on-builder.sh $BUILDER_IP
 ```
 
-If `.raw` exists but AMI failed:
+**5. If `.raw` exists but AMI missing, re-upload only:**
 
 ```bash
-./reupload-ami-from-builder.sh <BUILDER_IP>
+./reupload-ami-from-builder.sh $BUILDER_IP
 ```
 
-Check AMI is ready:
+**6. Confirm AMI is available:**
 
 ```bash
 aws ec2 describe-images --owners self \
@@ -93,7 +111,13 @@ aws ec2 describe-images --owners self \
   --output table
 ```
 
-### 2) Launch PoC from gold AMI
+```bash
+cat output/gold-ami.json
+```
+
+You want **State = available** and an id like `ami-07cb8e42f8e34bc14`.
+
+### Launch PoC from that AMI
 
 ```bash
 ./launch-gold-ami.sh
@@ -105,36 +129,31 @@ Wait 4–5 minutes, then:
 ./verify-remote.sh
 ```
 
-### 3) Manual checks
-
-Read the public IP from the output file:
-
 ```bash
 cat output/aws-outputs.json
 ```
 
-Then (replace the IP):
-
 ```bash
-curl -s http://1.2.3.4:35443/
-ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@1.2.3.4
+POC_IP=5.6.7.8
+curl -s http://$POC_IP:35443/
+ssh -i ~/.ssh/fl-gold-poc.pem -p 2222 fladmin1@$POC_IP
 ```
 
-### 4) Optional: deploy dummy boutique app
+Optional dummy app:
 
 ```bash
 cd ../../demo-app
-./deploy-to-vm.sh 1.2.3.4
+./deploy-to-vm.sh $POC_IP
+cd ../aws
 ```
 
-### 5) Cleanup
+### Cleanup
 
 ```bash
-cd ../aws
 ./terminate-ec2.sh
+cat output/builder-outputs.json
+aws ec2 terminate-instances --instance-ids i-BUILDER_ID
 ```
-
-Also terminate the builder if still running (ID is in `output/builder-outputs.json`).
 
 ---
 
