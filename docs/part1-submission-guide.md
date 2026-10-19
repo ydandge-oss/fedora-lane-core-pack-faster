@@ -22,6 +22,7 @@ Select topic: **Server/Cloud OS TDP**
 | Presentation script | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/presentation-script-part1-video.md |
 | Demo commands (compose → VM) | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/demo-commands-gold-image.md |
 | Where / when / why commands | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/where-when-why-commands.md |
+| How to build and run | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/how-to-build-and-run.md |
 | Customer Google Slides (upload PPTX) | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/Fedora-Lane-Expansion-Pack-Technical-Solution.pptx |
 | Slides upload instructions | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/customer-presentation-fedora-lane.md |
 | Slide outline | https://github.com/ydandge-oss/fedora-lane-core-pack-faster/blob/expansion-tdp-solution/docs/presentation-slides.md |

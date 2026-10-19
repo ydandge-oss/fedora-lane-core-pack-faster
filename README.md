@@ -8,6 +8,8 @@
 
 Upstream: [Composing a customized RHEL system image](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/composing_a_customized_rhel_system_image/image-builder-description)
 
+**How to build and run (start here):** [`docs/how-to-build-and-run.md`](./docs/how-to-build-and-run.md)
+
 > Never commit RHDP / cloud credentials (`env.local`, `.pem`, keys). Prefer a private remotes; add reviewers as required by your cohort.
 
 ---
@@ -31,6 +33,7 @@ Upstream: [Composing a customized RHEL system image](https://docs.redhat.com/en/
 | [`solution/cloud/azure/`](./solution/cloud/azure/) | Azure Blank OPEN — compose VHD, image, launch, verify |
 | [`solution/kickstart/`](./solution/kickstart/) | Alternate factory A |
 | [`solution/image-mode/`](./solution/image-mode/) | Alternate factory B (bootc) |
+| [`docs/how-to-build-and-run.md`](./docs/how-to-build-and-run.md) | **Build / upload / prove / day-2** (short guide) |
 | [`docs/`](./docs/) | Overview, runbooks, presentation scripts, checklist |
 
 ---
