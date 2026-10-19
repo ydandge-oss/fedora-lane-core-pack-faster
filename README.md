@@ -108,6 +108,7 @@ sudo ./scripts/compose.sh ami     # or: vhd
 | Verification checklist | [`docs/verification-checklist.md`](./docs/verification-checklist.md) |
 | Part 1 video script (~15 min) | [`docs/presentation-script-part1-video.md`](./docs/presentation-script-part1-video.md) |
 | Demo commands (compose → gold VM) | [`docs/demo-commands-gold-image.md`](./docs/demo-commands-gold-image.md) |
+| Launch gold image (CLI + Console, no scripts) | [`docs/launch-gold-image-cli-and-console.md`](./docs/launch-gold-image-cli-and-console.md) |
 | Part 2 live script | [`docs/presentation-script-part2-live.md`](./docs/presentation-script-part2-live.md) |
 | Slide outline | [`docs/presentation-slides.md`](./docs/presentation-slides.md) |
 | Part 1 submission guide | [`docs/part1-submission-guide.md`](./docs/part1-submission-guide.md) |
