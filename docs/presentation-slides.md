@@ -2,22 +2,21 @@
 
 **Customer deck (upload to Google Slides):**  
 [`Fedora-Lane-Expansion-Pack-Technical-Solution.pptx`](./Fedora-Lane-Expansion-Pack-Technical-Solution.pptx)  
-**Instructions:** [`customer-presentation-fedora-lane.md`](./customer-presentation-fedora-lane.md)
-
+**TDP mapping + upload steps:** [`customer-presentation-fedora-lane.md`](./customer-presentation-fedora-lane.md)  
 **Spoken script:** [`presentation-script-part1-video.md`](./presentation-script-part1-video.md)
 
-| # | Slide | One-liner |
-|---|---|---|
-| 1 | Title | Fedora Lane Expansion Pack — RHEL gold image (local Image Builder) |
-| 2 | Agenda | Challenges · solution · how it works · controls · ops · scale · next |
-| 3 | Challenges | Inconsistency · risky change · container skills gap |
-| 4 | Solution | Blueprint in Git → compose AMI/VHD → launch gold VMs |
-| 5 | Architecture | Factory → AWS AMI + Azure VHD → verified web node |
-| 6 | Path to VM | Compose → register → launch → firstboot → verify |
-| 7 | Controls | Partitions · SELinux · SSH 2222 · httpd:35443 · fladmins · firewall |
-| 8 | Ops | Console/CLI without scripts; SG/NSG + User data |
-| 9 | Evidence | Live verify + reboot (AWS and Azure proven) |
-| 10 | Scale | Freeze image · launch waves · replace · recompose for Day-2 |
-| 11 | Value | Map each challenge → deliverable |
-| 12 | Next | Non-prod pilot · optional OpenSCAP / Kickstart / Image Mode |
-| 13 | Close | Repo link · Q&A |
+| # | Segment | Slide | One-liner |
+|---|---|---|---|
+| 1 | — | Title | Expansion Pack gold image briefing |
+| 2 | Opening | Why we are here | Team · why · objective |
+| 3 | Opening | Challenges | Confirm Fedora Lane problems |
+| 4 | Opening | Agenda | Transition to walkthrough |
+| 5 | Walkthrough | What we implemented | Blueprint → AMI/VHD → gold VM |
+| 6 | Walkthrough | Critical decisions | Local IB · dual cloud · replace waves |
+| 7 | Walkthrough | Live path | End-user compose → launch → verify |
+| 8 | Walkthrough | Prove on VM | Expansion Pack + httpd:35443 live |
+| 9 | Value | Challenges addressed | Map solution → each challenge |
+| 10 | Value | Future possibilities | Scale · Day-2 · OpenSCAP · CI/CD |
+| 11 | Closing | Core message | Repeatable RHEL gold image |
+| 12 | Closing | One next step | Approve non-prod pilot |
+| 13 | — | Thank you | Repo · Q&A |

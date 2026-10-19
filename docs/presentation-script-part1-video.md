@@ -24,11 +24,17 @@ Use this script as a teleprompter. Keep Git open + one live PoC VM (Azure or AWS
 
 ## 1. Opening (1–2 min)
 
+**Why we are here / team / objective / agenda** (slides 1–4):
+
 “Hi, I’m [Name], Junior Consultant on the FASTER Server/Cloud OS TDP for **Fedora Lane**.
 
-Fedora Lane’s e-commerce web estate is roughly **1,600 servers** — mixed OS, long outages when changes go wrong, and ops still building comfort with **containers**. Expansion Pack asks for a **manual RHEL gold image** — not hosted Image Builder at console.redhat.com — that is deployable to cloud and locked down for the web tier.
+**Why we’re here:** Fedora Lane needs a secure, repeatable RHEL baseline for the e-commerce web fleet. We’re here to show a working Red Hat–based solution we designed, built, and can demo live.
 
-We built that with **local RHEL Image Builder**: one blueprint in Git. I’ll show the **exact commands** that produce a gold **VHD / AMI**, turn that into a **cloud VM**, and prove the Expansion Pack controls.”
+**Challenges we confirm:** roughly **1,600 servers**, mixed OS (Rocky, Ubuntu, CentOS Stream, Amazon Linux), long outages when change goes wrong, and a **container skills gap**. Expansion Pack wants a **manual / local Image Builder** gold image — not hosted console.redhat.com — for **AWS and Azure**.
+
+**Objective today:** confirm those challenges, walk the live implementation from the operator’s perspective, show value against each challenge, and leave you with **one clear next step**.
+
+**Agenda:** Opening → live walkthrough → value → closing. Let’s walk the solution.”
 
 ---
 
@@ -116,20 +122,30 @@ Say: “These checks are on a VM **launched from the gold image** we just descri
 
 ## 3. Value summary (2–5 min)
 
-| Challenge | What the command path delivered |
+**How this addresses the challenges** (slide 9):
+
+| Challenge | What we delivered |
 |---|---|
 | Inconsistency | One blueprint → `compose` → repeatable VHD/AMI → identical VMs |
 | Risky change | Hardened SSH/sudo baked in; rebuild from Git anytime |
 | Container skills gap | httpd **container** on 35443 on every gold VM |
-| Cloud | Same factory → Azure **and** AWS proven |
+| Dual cloud | Same factory → Azure **and** AWS proven |
+
+**Future possibilities we leave open** (slide 10):
+
+“This does not lock you in. You can feed the gold image into Launch Templates / ASG or Azure Scale Sets, recompose new versions from Git for Day-2, add OpenSCAP later on the same factory, or use Kickstart / Image Mode already in the repo. It also fits existing CI/CD and change-control.”
 
 ---
 
 ## 4. Closing (1–2 min)
 
-“**Next phase:** pilot this Image Builder gold image on non-prod web this month. Kickstart / Image Mode stay in the repo as alternate factories. Stretch: OpenSCAP.
+**Core message + one concrete next step** (slides 11–12):
 
-Repo has the runbooks and scripts — anyone can re-run the same commands. Thank you.”
+“**Core message:** Fedora Lane can standardize the web OS with a repeatable RHEL gold image — Image Builder, Git as source of truth, proven on AWS and Azure, Expansion Pack controls included.
+
+**One next step:** approve a **non-prod pilot** — launch web nodes from the gold AMI / Azure image this month. After that, wave-replace selected prod pools.
+
+Repo has the README, runbooks, and scripts — anyone can re-run the same path. Thank you — questions welcome.”
 
 ---
 
