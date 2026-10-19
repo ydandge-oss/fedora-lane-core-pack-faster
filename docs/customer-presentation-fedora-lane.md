@@ -3,6 +3,7 @@
 
 **File:** [`Fedora-Lane-Expansion-Pack-Technical-Solution.pptx`](./Fedora-Lane-Expansion-Pack-Technical-Solution.pptx)  
 **Spoken script:** [`presentation-script-part1-video.md`](./presentation-script-part1-video.md)  
+**How to build:** [`how-to-build-and-run.md`](./how-to-build-and-run.md)  
 **Duration:** ~15 minutes  
 
 ---
@@ -11,42 +12,42 @@
 
 1. Upload the `.pptx` to [Google Drive](https://drive.google.com)  
 2. Right-click → **Open with** → **Google Slides** → **Save as Google Slides**  
-3. Share with stakeholders  
 
 ---
 
-## Mapped to Junior Consultant deliverables
-
-| Required segment | Time | Slides | Covered |
-|---|---|---|---|
-| **Opening** — why here, team, confirm challenges, objective, agenda, transition | 1–2 min | 1–4 | Yes |
-| **Live walkthrough** — challenges understood, what we built in action, critical decisions | 5–10 min | 5–8 | Yes (demo on live VM during slides 7–8) |
-| **Value summary** — challenges addressed + future possibilities | 2–5 min | 9–10 | Yes |
-| **Closing** — core message, reiterate value, **one** concrete next step | 1–2 min | 11–13 | Yes |
-
-### Slide list
+## Slide list (14)
 
 | # | Section | Title |
 |---|---|---|
 | 1 | — | Title |
-| 2 | Opening | Why we are here (team + objective) |
-| 3 | Opening | Challenges we confirm with you |
-| 4 | Opening | Agenda → transition to walkthrough |
+| 2 | Opening | Why we are here |
+| 3 | Opening | Challenges we confirm |
+| 4 | Opening | Agenda |
 | 5 | Walkthrough | What we implemented |
-| 6 | Walkthrough | Critical decisions — and why |
-| 7 | Walkthrough | Live path (end-user view) |
-| 8 | Walkthrough | What we prove on the live VM |
-| 9 | Value | How this addresses Fedora Lane’s challenges |
-| 10 | Value | What this leaves open for the future |
-| 11 | Closing | Core message |
-| 12 | Closing | One concrete next step (non-prod pilot) |
-| 13 | — | Thank you / Q&A |
+| 6 | Walkthrough | **Solution architecture** (TOML → Builder → .raw → AMI → VMs) |
+| 7 | Walkthrough | **Build steps** (what we run) |
+| 8 | Walkthrough | Critical decisions — and why |
+| 9 | Walkthrough | What we prove on the live VM |
+| 10 | Value | Challenges addressed |
+| 11 | Value | Future possibilities |
+| 12 | Closing | Core message |
+| 13 | Closing | One concrete next step |
+| 14 | — | Thank you / Q&A |
 
-### Repo deliverables (outside the deck)
+### Slide 6 — architecture flow (like reference)
 
-| Requirement | Where |
-|---|---|
-| Git source of truth + README how to run | Root `README.md` |
-| Assets (scripts, blueprints) — no credentials | `solution/` |
-| Working live deployment | AWS AMI / Azure image + verify scripts |
-| Solution overview (architecture ↔ challenges) | `docs/solution-overview.md` |
+```text
+TOML (rhel-10.x) → Local Image Builder → Gold disk (.raw)
+        → AWS AMI (+ Azure VHD) → Web nodes (identical launches)
+```
+
+**On every VM:** SSH :2222 · httpd Podman :35443 · SELinux · firewall · `/tmp` noexec  
+
+### Slide 7 — build steps
+
+1. Blueprint in Git  
+2. Builder + `rhc connect`  
+3. Compose → `.raw`  
+4. Upload + `vmimport` → AMI  
+5. Launch EC2  
+6. Prove (SSH + curl + verify)  
