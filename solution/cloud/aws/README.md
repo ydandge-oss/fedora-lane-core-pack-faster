@@ -10,7 +10,8 @@ Prove Fedora Lane Expansion Pack controls on a real **EC2** instance using AWS C
 | Fast PoC (no gold AMI) | `./launch-ec2.sh` | Stock RHEL + cloud-init only |
 
 **Proven runbook:** [`docs/aws-gold-ami-poc-runbook.md`](../../../docs/aws-gold-ami-poc-runbook.md)  
-Short flow: [`docs/poc-gold-image-then-aws.md`](../../../docs/poc-gold-image-then-aws.md)
+Short flow: [`docs/poc-gold-image-then-aws.md`](../../../docs/poc-gold-image-then-aws.md)  
+**Where / when / why:** [`docs/where-when-why-commands.md`](../../../docs/where-when-why-commands.md)
 
 Fast PoC proves ports/services/security on AWS quickly. Separate `/var/log`,`/home`,`/tmp`,`/var/tmp` require the Image Builder AMI.
 

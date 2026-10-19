@@ -2,7 +2,8 @@
 
 RHDP **Azure Blank OPEN** → local Image Builder → **`.vhd`** → managed image → PoC VM.
 
-**Full steps:** [`docs/azure-gold-vhd-poc-runbook.md`](../../../docs/azure-gold-vhd-poc-runbook.md)
+**Full steps:** [`docs/azure-gold-vhd-poc-runbook.md`](../../../docs/azure-gold-vhd-poc-runbook.md)  
+**Where / when / why:** [`docs/where-when-why-commands.md`](../../../docs/where-when-why-commands.md)
 
 ## Quick path (project scripts)
 
